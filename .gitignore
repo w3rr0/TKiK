@@ -1,0 +1,7 @@
+cmake-build-debug/
+.idea/
+lexer.cpp
+parser.cpp
+parser.hpp
+*.o
+Interpreter-SQL
