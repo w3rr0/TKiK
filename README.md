@@ -7,19 +7,19 @@ TKiK/
 │   └── parser.y
 ├── include/
 │   ├── ast/
-│   │   ├── Statement.h
-│   │   ├── SelectStmt.h
-│   │   ├── CreateStmt.h
+│   │   ├── Statement.hpp
+│   │   ├── SelectStmt.hpp
+│   │   ├── CreateStmt.hpp
 │   │   └── ...
 │   ├── storage/
-│   │   ├── Table.h
-│   │   ├── Cell.h
-│   │   └── Database.h
+│   │   ├── Table.hpp
+│   │   ├── Cell.hpp
+│   │   └── Database.hpp
 │   ├── executor/
-│   │   ├── Executor.h
-│   │   └── SelectExecutor.h
+│   │   ├── Executor.hpp
+│   │   └── SelectExecutor.hpp
 │   └── utils/
-│       └── Types.h
+│       └── Types.hpp
 └── src/
     ├── ast/
     │   └── ...
