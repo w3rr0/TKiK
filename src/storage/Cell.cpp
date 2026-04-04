@@ -1,4 +1,4 @@
-#include "storage/Cell.h"
+#include "storage/Cell.hpp"
 #include <stdexcept>
 
 Cell::Type Cell::getType() const {
