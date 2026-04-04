@@ -13,3 +13,6 @@ parser.cpp
 parser.hpp
 *.o
 Interpreter-SQL
+
+# Clang files
+.clangd
