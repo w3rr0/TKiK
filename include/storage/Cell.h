@@ -33,6 +33,8 @@ public:
     bool operator<=(const Cell& other) const { return !(*this > other); }
     bool operator>=(const Cell& other) const { return !(*this < other); }
 
+    void checkNullComparison(const Cell& other) const;
+
     // Display
     friend std::ostream& operator<<(std::ostream& os, const Cell& cell);
 
