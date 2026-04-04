@@ -1,5 +1,13 @@
-cmake-build-debug/
+# IDE files
 .idea/
+.vscode/
+
+# CMake files
+cmake-build-debug/
+CMakeFiles/
+CMakeCache.txt
+
+# Grammar source files
 lexer.cpp
 parser.cpp
 parser.hpp
