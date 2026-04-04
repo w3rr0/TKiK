@@ -14,5 +14,6 @@ parser.hpp
 *.o
 Interpreter-SQL
 
-# Clang files
+# Clang language server
 .clangd
+compile_flags.txt
