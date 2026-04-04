@@ -13,7 +13,7 @@ public:
     };
 
     // Constructors
-    Cell() : value(std::monostate{}) {};
+    Cell() : value(std::monostate{}) {}
     explicit Cell(int v) : value(v) {}
     explicit Cell(double v) : value(v) {}
     explicit Cell(std::string v) : value(std::move(v)) {}
