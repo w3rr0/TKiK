@@ -7,14 +7,15 @@ int yylex();
 void yyerror(const char *s);
 %}
 
-// co mogą przechowywać tokeny (liczbę lub tekst)
+// what tokens can store (number or text)
 %union {
     int num;
     char* str;
 }
 
-// wszystkie tokeny, które skaner będzie wysyłał i typy opcjonalne w <>
+// all tokens that the scanner will send and optional types in <>
 %token SELECT FROM WHERE CREATE TABLE INSERT INTO VALUES UPDATE DELETE SET
+%token DROP COLUMN ALTER
 %token TYPE_INT TYPE_STRING TYPE_BOOL TYPE_DOUBLE TYPE_FLOAT
 %token ORDER BY ASC DESC
 %token IN LIKE BETWEEN
@@ -24,89 +25,91 @@ void yyerror(const char *s);
 %token <num> NUMBER
 %token <str> ID STR
 
-// Definicja priorytetów dla operatorów logicznych (zapobiega konfliktom)
+// define priorities for logical operators (prevents conflicts)
 %left OR
 %left AND
 
 %%
-// 'cel:' + 'składnik1' + 'składnik2' + ';'
+// 'target:' + 'ingredient1' + 'ingredient2' + ';'
 program:
     instrukcja SEMICOLON
     ;
 
-// MOŻLIWE INSTRUKCJE
+// POSSIBLE INSTRUCTIONS
 instrukcja:
     select_stmt
     | create_stmt
     | insert_stmt
     | update_stmt
     | delete_stmt
+    | drop_table_stmt
+    | alter_table_stmt
     ;
 
-// SELECT z DISTINCT i ORDER BY
+// SELECT with DISTINCT and ORDER BY
 select_stmt:
     SELECT opt_distinct columns FROM ID where_clause opt_order_by {
-        std::cout << "Akcja: SELECT z tabeli " << $5 << std::endl;
+        std::cout << "Action: SELECT from table " << $5 << std::endl;
     }
     ;
 
 opt_distinct:
-    /* puste */
-    | DISTINCT { std::cout << "  Opcja: DISTINCT" << std::endl; }
+    /* blank */
+    | DISTINCT { std::cout << "  Option: DISTINCT" << std::endl; }
     ;
 
 where_clause:
-	/* puste  */
+	/* blank  */
     | WHERE condition
     ;
 
-// przyklady warunkow w WHERE
+// examples of conditions in WHERE
 condition:
-    ID EQ value         { std::cout << "  Warunek: " << $1 << " = value" << std::endl; }
-    | ID GT value       { std::cout << "  Warunek: " << $1 << " > value" << std::endl; }
-    | ID LT value       { std::cout << "  Warunek: " << $1 << " < value" << std::endl; }
-    | ID GE value       { std::cout << "  Warunek: " << $1 << " >= value" << std::endl; }
-    | ID LE value       { std::cout << "  Warunek: " << $1 << " <= value" << std::endl; }
+    ID EQ value         { std::cout << "  Condition: " << $1 << " = value" << std::endl; }
+    | ID GT value       { std::cout << "  Condition: " << $1 << " > value" << std::endl; }
+    | ID LT value       { std::cout << "  Condition: " << $1 << " < value" << std::endl; }
+    | ID GE value       { std::cout << "  Condition: " << $1 << " >= value" << std::endl; }
+    | ID LE value       { std::cout << "  Condition: " << $1 << " <= value" << std::endl; }
 
-    | ID LIKE STR       { std::cout << "  Warunek: " << $1 << " matches pattern " << $3 << std::endl; }
-    | ID IN LPAREN value_list RPAREN { std::cout << "  Warunek: " << $1 << " in list" << std::endl; }
-    | STR IN LPAREN value_list RPAREN { std::cout << "  Warunek: staly napis w liscie." << std::endl; }
+    | ID LIKE STR       { std::cout << "  Condition: " << $1 << " matches pattern " << $3 << std::endl; }
+    | ID IN LPAREN value_list RPAREN { std::cout << "  Condition: " << $1 << " in list" << std::endl; }
+    | STR IN LPAREN value_list RPAREN { std::cout << "  Condition: permanent inscription in the list." << std::endl; }
     | ID BETWEEN value AND value {
-            std::cout << "  Warunek: " << $1 << " pomiedzy wartosciami" << std::endl;
+            std::cout << "  Condition: " << $1 << " between values" << std::endl;
         }
 
-    | condition AND condition { std::cout << "  Laczenie: AND" << std::endl; }
-    | condition OR condition  { std::cout << "  Laczenie: OR" << std::endl; }
+    | condition AND condition { std::cout << "  Connection: AND" << std::endl; }
+    | condition OR condition  { std::cout << "  Connection: OR" << std::endl; }
     | LPAREN condition RPAREN
     ;
 
 
 id_list:
-    ID                  { std::cout << "Kolumna: " << $1 << std::endl; }
-    | id_list COMMA ID  { std::cout << "Kolumna: " << $3 << std::endl; }
+    ID                  { std::cout << "Column: " << $1 << std::endl; }
+    | id_list COMMA ID  { std::cout << "Column: " << $3 << std::endl; }
     ;
 
 // CREATE TABLE
 create_stmt:
     CREATE TABLE ID LPAREN column_defs RPAREN {
-        std::cout << "Tworze tabele: " << $3 << std::endl;
+        std::cout << "Creating table: " << $3 << std::endl;
     }
     ;
 
-// KOLUMNY
+// COLUMNS
 column_defs:
     column_def
     | column_defs COMMA column_def
     ;
 
-// $1, $3 -> zmienne pseudo-identyfikacyjne w Bisonie
+// $1, $3 -> pseudo-identification variables in Bison
 column_def:
     ID data_type {
-        std::cout << "  Dodaje kolumne: " << $1 << std::endl;
+        std::cout << "  Column added: " << $1 << std::endl;
     }
     ;
 
-// TYPY
+// DATA TYPES
 data_type:
     TYPE_INT | TYPE_STRING | TYPE_BOOL | TYPE_DOUBLE | TYPE_FLOAT
     ;
@@ -114,48 +117,62 @@ data_type:
 // INSERT INTO
 insert_stmt:
     INSERT INTO ID VALUES LPAREN value_list RPAREN {
-    		// to wykona sie, gdy parser uzna, ze dany fragment pasuje do wzorca
-        std::cout << "Wstawiam dane do tabeli: " << $3 << std::endl;
+    		// this will be executed when the parser finds that the fragment matches the pattern
+        std::cout << "Inserting data into the table: " << $3 << std::endl;
     }
     ;
 
 // DELETE
 delete_stmt:
     DELETE FROM ID where_clause {
-        std::cout << "Usuwanie z tabeli " << $3 << std::endl;
+        std::cout << "Removing from table " << $3 << std::endl;
     }
     ;
 
 // UPDATE
 update_stmt:
     UPDATE ID SET ID EQ value where_clause {
-        std::cout << "Aktualizacja tabeli " << $2 << ", kolumna " << $4 << std::endl;
+        std::cout << "Updating table " << $2 << ", column " << $4 << std::endl;
+    }
+    ;
+
+// DROP TABLE
+drop_table_stmt:
+    DROP TABLE ID {
+        std::cout << "Deleting table " << $3 << std::endl;
+    }
+    ;
+
+// DROP COLUMN WITH ALTER
+alter_table_stmt:
+    ALTER TABLE ID DROP COLUMN ID {
+        std::cout << "Deleting column " << $6 << " from table " << $3 << std::endl;
     }
     ;
 
 opt_order_by:
-    /* puste */
-    | ORDER BY ID opt_asc_desc { std::cout << "  Sortowanie po: " << $3 << std::endl; }
+    /* blank */
+    | ORDER BY ID opt_asc_desc { std::cout << "  Sorting by: " << $3 << std::endl; }
     ;
 
 opt_asc_desc:
-    /* puste */
+    /* blank */
     | ASC
     | DESC
     ;
 
-// Agregacje w kolumnach
+// Column aggregations
 columns:
-    STAR                { std::cout << "Wybrano wszystkie kolumny (*)" << std::endl; }
-    | id_list           { std::cout << "Zakonczono wczytywanie listy kolumn." << std::endl; }
+    STAR                { std::cout << "All columns selected (*)" << std::endl; }
+    | id_list           { std::cout << "Finished loading column list." << std::endl; }
     | aggregate_func
     ;
 
 aggregate_func:
-    COUNT LPAREN STAR RPAREN { std::cout << "  Agregacja: COUNT(*)" << std::endl; }
-    | SUM LPAREN ID RPAREN   { std::cout << "  Agregacja: SUM(" << $3 << ")" << std::endl; }
-    | MIN LPAREN ID RPAREN   { std::cout << "  Agregacja: MIN(" << $3 << ")" << std::endl; }
-    | MAX LPAREN ID RPAREN   { std::cout << "  Agregacja: MAX(" << $3 << ")" << std::endl; }
+    COUNT LPAREN STAR RPAREN { std::cout << "  Aggregation: COUNT(*)" << std::endl; }
+    | SUM LPAREN ID RPAREN   { std::cout << "  Aggregation: SUM(" << $3 << ")" << std::endl; }
+    | MIN LPAREN ID RPAREN   { std::cout << "  Aggregation: MIN(" << $3 << ")" << std::endl; }
+    | MAX LPAREN ID RPAREN   { std::cout << "  Aggregation: MAX(" << $3 << ")" << std::endl; }
     ;
 
 value_list:
@@ -169,8 +186,9 @@ value:
 
 %%
 
-// funkcja, która zostanie wywołana automatycznie,
-// jeśli użytkownik wpisze coś, co nie pasuje do gramatyki
+
+// function that will be called automatically
+// if the user enters something that doesn't match the grammar
 void yyerror(const char *s) {
-    std::cerr << "Blad skladu: " << s << std::endl;
+    std::cerr << "Syntax error: " << s << std::endl;
 }

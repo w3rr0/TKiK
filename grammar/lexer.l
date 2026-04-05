@@ -4,21 +4,21 @@
 #include <iostream>
 #include <string.h>
 
-// funkcja, którą Bison woła, aby dostać kolejny token
+// function that Bison calls to get the next token
 int yylex();
 %}
 
-/* po przeczytaniu jednego pliku ma zakończyć pracę */
+/* after reading one file it should exit */
 %option noyywrap
 
-%% /* oddziela definicje od reguł */
-    /* podstawowe SELECT */
+%% /* separates definitions from rules*/
+    /* classic SELECT */
 "SELECT"    { return SELECT; }
 "DISTINCT"  { return DISTINCT; }
 "FROM"      { return FROM; }
 "WHERE"     { return WHERE; }
 
-    /* CREATE TABLE / UPDATE / DELETE / INSERT INTO */
+    /* CREATE TABLE / UPDATE / DELETE / INSERT INTO / DROP */
 "CREATE"    { return CREATE; }
 "TABLE"     { return TABLE; }
 "INSERT"    { return INSERT; }
@@ -27,8 +27,11 @@ int yylex();
 "UPDATE"    { return UPDATE; }
 "DELETE"    { return DELETE; }
 "SET"       { return SET; }
+"DROP"      { return DROP; }
+"COLUMN"    { return COLUMN; }
+"ALTER"     { return ALTER; }
 
-    /* OPERACJE ZE STRINGAMI */
+    /* OPERATIONS WITH STRINGS */
 "IN"        { return IN; }
 "LIKE"      { return LIKE; }
 "BETWEEN"   { return BETWEEN; }
@@ -39,13 +42,13 @@ int yylex();
 "ASC"       { return ASC; }
 "DESC"      { return DESC; }
 
-    /* FUNKCJE AGREGUJĄCE */
+    /* AGGREGATE FUNCTIONS */
 "COUNT"     { return COUNT; }
 "SUM"       { return SUM; }
 "MIN"        { return MIN; }
 "MAX"        { return MAX; }
 
-    /* Typy danych dla CREATE TABLE */
+    /* data types for CREATE TABLE*/
 "INT"       { return TYPE_INT; }
 "STRING"    { return TYPE_STRING; }
 "TEXT"      { return TYPE_STRING; }
@@ -54,7 +57,7 @@ int yylex();
 "DOUBLE"     { return TYPE_DOUBLE; }
 "FLOAT"      { return TYPE_FLOAT; }
 
-    /* OPERATORY */
+    /* OPERATORS */
 "*"         { return STAR; }
 "="         { return EQ; }
 ">"         { return GT; }
@@ -64,28 +67,28 @@ int yylex();
 "AND"       { return AND; }
 "OR"        { return OR; }
 
-    /* NAWIASY / PRZECINEK / ŚREDNIK */
+    /* PARENTHESES / COMMA / SEMICOLON */
 "("         { return LPAREN; }
 ")"         { return RPAREN; }
 ","         { return COMMA; }
 ";"         { return SEMICOLON; }
 
-    /* yytext, yylval -> wbudowane zmienne Flexa */
+    /* yytext, yylval -> built-in Flex variables */
 [0-9]+      { yylval.num = atoi(yytext); return NUMBER; }
 
-    /* LITERY / LICZBY -> WYRAŻENIE REGULARNE */
+    /* LETTERS / NUMBERS -> REGEX */
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval.str = strdup(yytext); // kopiuje tekst do yylval.str
+    yylval.str = strdup(yytext); // copies text to yylval.str
     return ID;
 }
 
-    /* NAWIASY KWADRATOWE */
+    /* SQUARE BRACKETS */
 \'[^\']*\'  {
     yylval.str = strdup(yytext);
     return STR;
 }
 
-    /* BIAŁE ZNAKI -> POMIJAMY */
-[ \t\n]+    { /* ignoruj */ }
-.           { std::cerr << "Nieznany znak: " << yytext << std::endl; }
+    /* WHITE MARKS -> SKIP */
+[ \t\n]+    { /* ignore */ }
+.           { std::cerr << "Unknown char " << yytext << std::endl; }
 %%
