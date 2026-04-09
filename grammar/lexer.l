@@ -35,6 +35,7 @@ int yylex();
 "IN"        { return IN; }
 "LIKE"      { return LIKE; }
 "BETWEEN"   { return BETWEEN; }
+"IS" { return IS; }
 
     /* ORDER BY */
 "ORDER"     { return ORDER; }
@@ -56,6 +57,7 @@ int yylex();
 "BOOLEAN"    { return TYPE_BOOL; }
 "DOUBLE"     { return TYPE_DOUBLE; }
 "FLOAT"      { return TYPE_FLOAT; }
+"NULL"      { return TYPE_NULL; }
 
     /* OPERATORS */
 "*"         { return STAR; }

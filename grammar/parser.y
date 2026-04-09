@@ -16,9 +16,9 @@ void yyerror(const char *s);
 // all tokens that the scanner will send and optional types in <>
 %token SELECT FROM WHERE CREATE TABLE INSERT INTO VALUES UPDATE DELETE SET DROP COLUMN ALTER
 
-%token TYPE_INT TYPE_STRING TYPE_BOOL TYPE_DOUBLE TYPE_FLOAT
+%token TYPE_INT TYPE_STRING TYPE_BOOL TYPE_DOUBLE TYPE_FLOAT TYPE_NULL
 
-%token IN LIKE BETWEEN AND OR
+%token IN LIKE BETWEEN AND OR IS
 %token DISTINCT COUNT SUM MIN MAX
 %token ORDER BY ASC DESC
 
@@ -62,7 +62,7 @@ opt_distinct:
     ;
 
 where_clause:
-	/* blank  */
+/* blank  */
     | WHERE condition
     ;
 
@@ -73,6 +73,7 @@ condition:
     | ID LT value       { std::cout << "  Condition: " << $1 << " < value" << std::endl; }
     | ID GE value       { std::cout << "  Condition: " << $1 << " >= value" << std::endl; }
     | ID LE value       { std::cout << "  Condition: " << $1 << " <= value" << std::endl; }
+    | ID IS TYPE_NULL { std::cout << "  Condition: " << $1 << " is null" << std::endl; }
 
     | ID LIKE STR       { std::cout << "  Condition: " << $1 << " matches pattern " << $3 << std::endl; }
     | ID IN LPAREN value_list RPAREN { std::cout << "  Condition: " << $1 << " in list" << std::endl; }
@@ -102,7 +103,7 @@ create_stmt:
 // COLUMNS
 column_defs:
     column_def
-    | column_defs COMMA column_def
+    | column_def COMMA column_def
     ;
 
 // $1, $3 -> pseudo-identification variables in Bison
@@ -114,7 +115,7 @@ column_def:
 
 // DATA TYPES
 data_type:
-    TYPE_INT | TYPE_STRING | TYPE_BOOL | TYPE_DOUBLE | TYPE_FLOAT
+    TYPE_INT | TYPE_STRING | TYPE_BOOL | TYPE_DOUBLE | TYPE_FLOAT | TYPE_NULL
     ;
 
 // INSERT INTO
@@ -184,7 +185,7 @@ value_list:
     ;
 
 value:
-    NUMBER | STR | ID
+    NUMBER | STR | ID | TYPE_NULL
     ;
 
 %%
