@@ -7,7 +7,7 @@
 * **Konrad Mateja**
 * **Kontakt:** 
   * krlesniak@student.agh.edu.pl
-  * kmateja@studenta.gh.edu.pl
+  * kmateja@student.agh.edu.pl
 
 ---
 
