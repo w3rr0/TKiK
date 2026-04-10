@@ -1,16 +1,49 @@
+%code requires {
+    #include <string>
+    #include <vector>
+    #include <memory>
+
+    // forward declarations
+    #include "ast/Statement.hpp"
+    #include "ast/WhereClause.hpp"
+    #include "ast/ColumnDef.hpp"
+    #include "ast/SelectStmt.hpp"
+    #include "ast/InsertStmt.hpp"
+    #include "ast/CreateStmt.hpp"
+    #include "ast/DeleteStmt.hpp"
+    #include "ast/UpdateStmt.hpp"
+    #include "ast/DropTableStmt.hpp"
+    #include "ast/AlterTableStmt.hpp"
+}
+
 %{
 #include <iostream>
 #include <cstdio>
-#include <string>
+
+#include "ast/Statement.hpp"
 
 int yylex();
 void yyerror(const char *s);
+
+// pointer for parsing results
+Statement* root_statement = nullptr;
 %}
 
 // what tokens can store (number or text)
 %union {
-    int num;
+int num;
     char* str;
+    bool boolean;
+    Statement* stmt;
+    WhereClause* where;
+    ColumnDef* col_def;
+    std::vector<ColumnDef>* col_defs;
+    std::vector<std::string>* strings;
+    SelectStmt::Aggregate agg_type;
+    struct {
+        SelectStmt::Aggregate type;
+        char* col;
+    } agg_val;
 }
 
 // all tokens that the scanner will send and optional types in <>
@@ -29,163 +62,236 @@ void yyerror(const char *s);
 %token <str> ID STR
 
 // define priorities for logical operators (prevents conflicts)
+// definiotion of types for our grammar rules
+%type <stmt> instrukcja select_stmt create_stmt insert_stmt update_stmt delete_stmt drop_table_stmt alter_table_stmt
+%type <where> where_clause condition
+%type <strings> id_list value_list columns
+%type <col_defs> column_defs
+%type <col_def> column_def
+%type <str> data_type value opt_order_by
+%type <boolean> opt_distinct opt_asc_desc
+%type <agg_val> aggregate_func
+
 %left OR
 %left AND
 
 %%
 // 'target:' + 'ingredient1' + 'ingredient2' + ';'
 program:
-    instrukcja SEMICOLON
+    instrukcja SEMICOLON {
+        root_statement = $1;
+        YYACCEPT;
+    }
     ;
 
 // POSSIBLE INSTRUCTIONS
 instrukcja:
-    select_stmt
-    | create_stmt
-    | insert_stmt
-    | update_stmt
-    | delete_stmt
-    | drop_table_stmt
-    | alter_table_stmt
+    select_stmt         { $$ = $1; }
+    | create_stmt       { $$ = $1; }
+    | insert_stmt       { $$ = $1; }
+    | update_stmt       { $$ = $1; }
+    | delete_stmt       { $$ = $1; }
+    | drop_table_stmt   { $$ = $1; }
+    | alter_table_stmt  { $$ = $1; }
     ;
 
 // SELECT with DISTINCT and ORDER BY
 select_stmt:
-    SELECT opt_distinct columns FROM ID where_clause opt_order_by {
-        std::cout << "Action: SELECT from table " << $5 << std::endl;
+    SELECT opt_distinct columns FROM ID where_clause opt_order_by opt_asc_desc {
+        auto* sel = new SelectStmt($5, *$3, $2);
+
+        // WHERE
+        if ($6) sel->setWhere(std::unique_ptr<WhereClause>($6));
+
+        // RDER BY (if $7 is not null)
+        if ($7) {
+            sel->setOrder($7, $8);
+            free($7);
+        }
+
+        // checking for aggregation
+        if (!($3->empty()) && (*$3)[0] == "AGG_MARKER") {
+            // later
+        }
+
+        $$ = sel;
+        free($5); delete $3;
     }
     ;
 
 opt_distinct:
-    /* blank */
-    | DISTINCT { std::cout << "  Option: DISTINCT" << std::endl; }
+    /* blank */ { $$ = false; }
+    | DISTINCT  { $$ = true; }
     ;
 
 where_clause:
-/* blank  */
-    | WHERE condition
+    /* blank */ { $$ = nullptr; }
+    | WHERE condition { $$ = $2; }
     ;
 
 // examples of conditions in WHERE
 condition:
-    ID EQ value         { std::cout << "  Condition: " << $1 << " = value" << std::endl; }
-    | ID GT value       { std::cout << "  Condition: " << $1 << " > value" << std::endl; }
-    | ID LT value       { std::cout << "  Condition: " << $1 << " < value" << std::endl; }
-    | ID GE value       { std::cout << "  Condition: " << $1 << " >= value" << std::endl; }
-    | ID LE value       { std::cout << "  Condition: " << $1 << " <= value" << std::endl; }
-    | ID IS TYPE_NULL { std::cout << "  Condition: " << $1 << " is null" << std::endl; }
-
-    | ID LIKE STR       { std::cout << "  Condition: " << $1 << " matches pattern " << $3 << std::endl; }
-    | ID IN LPAREN value_list RPAREN { std::cout << "  Condition: " << $1 << " in list" << std::endl; }
-    | STR IN LPAREN value_list RPAREN { std::cout << "  Condition: permanent inscription in the list." << std::endl; }
+    ID EQ value {
+        $$ = new ComparisonCondition($1, "=", $3);
+        free($1); free($3);
+    }
+    | ID GT value {
+        $$ = new ComparisonCondition($1, ">", $3);
+        free($1); free($3);
+    }
+    | ID LT value {
+        $$ = new ComparisonCondition($1, "<", $3);
+        free($1); free($3);
+    }
+    | ID GE value {
+        $$ = new ComparisonCondition($1, ">=", $3);
+        free($1); free($3);
+    }
+    | ID LE value {
+        $$ = new ComparisonCondition($1, "<=", $3);
+        free($1); free($3);
+    }
+    | ID IS TYPE_NULL {
+        $$ = new ComparisonCondition($1, "IS", "NULL");
+        free($1);
+    }
+    | ID LIKE STR {
+        $$ = new ComparisonCondition($1, "LIKE", $3);
+        free($1); free($3);
+    }
+    | ID IN LPAREN value_list RPAREN {
+        $$ = new InCondition($1, *$4);
+        free($1); delete $4;
+    }
     | ID BETWEEN value AND value {
-            std::cout << "  Condition: " << $1 << " between values" << std::endl;
-        }
-
-    | condition AND condition { std::cout << "  Connection: AND" << std::endl; }
-    | condition OR condition  { std::cout << "  Connection: OR" << std::endl; }
-    | LPAREN condition RPAREN
+        $$ = new BetweenCondition($1, $3, $5);
+        free($1); free($3); free($5);
+    }
+    | condition AND condition {
+        $$ = new LogicalCondition(std::unique_ptr<WhereClause>($1), "AND", std::unique_ptr<WhereClause>($3));
+    }
+    | condition OR condition  {
+        $$ = new LogicalCondition(std::unique_ptr<WhereClause>($1), "OR", std::unique_ptr<WhereClause>($3));
+    }
+    | LPAREN condition RPAREN {
+        $$ = $2;
+    }
     ;
 
 
 id_list:
-    ID                  { std::cout << "Column: " << $1 << std::endl; }
-    | id_list COMMA ID  { std::cout << "Column: " << $3 << std::endl; }
+    ID { $$ = new std::vector<std::string>(); $$->push_back($1); free($1); }
+    | id_list COMMA ID { $1->push_back($3); $$ = $1; free($3); }
     ;
 
 // CREATE TABLE
 create_stmt:
     CREATE TABLE ID LPAREN column_defs RPAREN {
-        std::cout << "Creating table: " << $3 << std::endl;
+        $$ = new CreateStmt($3, *$5);
+        free($3); delete $5;
     }
     ;
 
 // COLUMNS
 column_defs:
-    column_def
-    | column_def COMMA column_def
+    column_def { $$ = new std::vector<ColumnDef>(); $$->push_back(*$1); delete $1; }
+    | column_defs COMMA column_def { $1->push_back(*$3); $$ = $1; delete $3; }
     ;
 
 // $1, $3 -> pseudo-identification variables in Bison
 column_def:
-    ID data_type {
-        std::cout << "  Column added: " << $1 << std::endl;
-    }
+    ID data_type { $$ = new ColumnDef{$1, $2}; free($1); }
     ;
 
 // DATA TYPES
 data_type:
-    TYPE_INT | TYPE_STRING | TYPE_BOOL | TYPE_DOUBLE | TYPE_FLOAT | TYPE_NULL
+    TYPE_INT      { $$ = strdup("INT"); }
+    | TYPE_STRING { $$ = strdup("STRING"); }
+    | TYPE_BOOL   { $$ = strdup("BOOL"); }
+    | TYPE_DOUBLE { $$ = strdup("DOUBLE"); }
+    | TYPE_FLOAT  { $$ = strdup("FLOAT"); }
     ;
 
 // INSERT INTO
 insert_stmt:
     INSERT INTO ID VALUES LPAREN value_list RPAREN {
-    		// this will be executed when the parser finds that the fragment matches the pattern
-        std::cout << "Inserting data into the table: " << $3 << std::endl;
+        $$ = new InsertStmt($3, *$6);
+        free($3); delete $6;
     }
     ;
 
 // DELETE
 delete_stmt:
     DELETE FROM ID where_clause {
-        std::cout << "Removing from table " << $3 << std::endl;
+        auto* del = new DeleteStmt($3); // Poprawione: tylko jeden argument
+        if ($4) del->setWhere(std::unique_ptr<WhereClause>($4));
+        $$ = del;
+        free($3);
     }
-    ;
 
 // UPDATE
 update_stmt:
     UPDATE ID SET ID EQ value where_clause {
-        std::cout << "Updating table " << $2 << ", column " << $4 << std::endl;
+        auto* upd = new UpdateStmt($2, $4, $6);
+        if ($7) {
+            // if WHERE condition
+            upd->setWhere(std::unique_ptr<WhereClause>($7));
+        }
+        $$ = upd;
+        free($2); free($4); free($6);
     }
     ;
 
 // DROP TABLE
 drop_table_stmt:
-    DROP TABLE ID {
-        std::cout << "Deleting table " << $3 << std::endl;
-    }
+    DROP TABLE ID { $$ = new DropTableStmt($3); free($3); }
     ;
 
 // DROP COLUMN WITH ALTER
 alter_table_stmt:
     ALTER TABLE ID DROP COLUMN ID {
-        std::cout << "Deleting column " << $6 << " from table " << $3 << std::endl;
+        $$ = new AlterTableStmt($3, $6);
+        free($3); free($6);
     }
     ;
 
+// ORDER BY ASC / DESC
 opt_order_by:
-    /* blank */
-    | ORDER BY ID opt_asc_desc { std::cout << "  Sorting by: " << $3 << std::endl; }
+    /* puste */ { $$ = nullptr; }
+    | ORDER BY ID { $$ = $3; } //column name
     ;
 
 opt_asc_desc:
-    /* blank */
-    | ASC
-    | DESC
+    /* blank */ { $$ = true; } // default
+    | ASC       { $$ = true; }
+    | DESC      { $$ = false; }
     ;
-
 // Column aggregations
 columns:
-    STAR                { std::cout << "All columns selected (*)" << std::endl; }
-    | id_list           { std::cout << "Finished loading column list." << std::endl; }
-    | aggregate_func
+    STAR      { $$ = new std::vector<std::string>{"*"}; }
+    | id_list { $$ = $1; }
+    | aggregate_func {
+        $$ = new std::vector<std::string>{"AGGREGATE_PLACEHOLDER"};
+    }
     ;
 
 aggregate_func:
-    COUNT LPAREN STAR RPAREN { std::cout << "  Aggregation: COUNT(*)" << std::endl; }
-    | SUM LPAREN ID RPAREN   { std::cout << "  Aggregation: SUM(" << $3 << ")" << std::endl; }
-    | MIN LPAREN ID RPAREN   { std::cout << "  Aggregation: MIN(" << $3 << ")" << std::endl; }
-    | MAX LPAREN ID RPAREN   { std::cout << "  Aggregation: MAX(" << $3 << ")" << std::endl; }
+    COUNT LPAREN STAR RPAREN { $$.type = SelectStmt::Aggregate::COUNT; $$.col = strdup("*"); }
+    | SUM LPAREN ID RPAREN   { $$.type = SelectStmt::Aggregate::SUM; $$.col = $3; }
+    | MIN LPAREN ID RPAREN   { $$.type = SelectStmt::Aggregate::MIN; $$.col = $3; }
+    | MAX LPAREN ID RPAREN   { $$.type = SelectStmt::Aggregate::MAX; $$.col = $3; }
     ;
 
 value_list:
-    value
-    | value_list COMMA value
+    value { $$ = new std::vector<std::string>(); $$->push_back($1); free($1); }
+    | value_list COMMA value { $1->push_back($3); $$ = $1; free($3); }
     ;
 
 value:
-    NUMBER | STR | ID | TYPE_NULL
+    NUMBER { $$ = strdup(std::to_string($1).c_str()); }
+    | STR { $$ = $1; }
+    | ID { $$ = $1; }
+    | TYPE_NULL { $$ = strdup("NULL"); }
     ;
 
 %%

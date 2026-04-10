@@ -2,17 +2,13 @@ cmake_minimum_required(VERSION 3.20)
 project(Interpreter-SQL)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 if(APPLE)
-    # Wyłączamy szukanie w systemowych ścieżkach /usr/bin, żeby nie brał starego Bisona 2.3
     set(BISON_EXECUTABLE "/opt/homebrew/opt/bison/bin/bison")
     set(FLEX_EXECUTABLE "/opt/homebrew/opt/flex/bin/flex")
-
-    # Dodatkowe ścieżki dla CMake
     list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/bison")
     list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/flex")
 endif()
@@ -20,7 +16,6 @@ endif()
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
 
-# generowanie plików
 BISON_TARGET(MyParser grammar/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp)
 FLEX_TARGET(MyScanner grammar/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.cpp)
 ADD_FLEX_BISON_DEPENDENCY(MyScanner MyParser)
@@ -28,8 +23,10 @@ ADD_FLEX_BISON_DEPENDENCY(MyScanner MyParser)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(include)
 
+file(GLOB_RECURSE ALL_SOURCES "src/*.cpp")
+
 add_executable(Interpreter-SQL
-        src/main.cpp
+        ${ALL_SOURCES}
         ${BISON_MyParser_OUTPUTS}
         ${FLEX_MyScanner_OUTPUTS}
 )

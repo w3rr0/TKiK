@@ -1,8 +1,14 @@
 %{
 // dołączamy biblioteki i plik .hpp
-#include "parser.hpp"
 #include <iostream>
 #include <string.h>
+
+#include "ast/Statement.hpp"
+#include "ast/SelectStmt.hpp"
+#include "ast/WhereClause.hpp"
+#include "ast/ColumnDef.hpp"
+
+#include "parser.hpp"
 
 // function that Bison calls to get the next token
 int yylex();
@@ -75,6 +81,13 @@ int yylex();
 ","         { return COMMA; }
 ";"         { return SEMICOLON; }
 
+
+    /* float numbers */
+[0-9]+\.[0-9]+ {
+    yylval.str = strdup(yytext);
+    return STR;
+}
+
     /* yytext, yylval -> built-in Flex variables */
 [0-9]+      { yylval.num = atoi(yytext); return NUMBER; }
 
@@ -93,4 +106,5 @@ int yylex();
     /* WHITE MARKS -> SKIP */
 [ \t\n]+    { /* ignore */ }
 .           { std::cerr << "Unknown char " << yytext << std::endl; }
+
 %%

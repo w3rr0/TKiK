@@ -1,23 +1,25 @@
 #include <iostream>
-#include <cstdio>
+#include "parser.hpp"
+#include "ast/Statement.hpp"
 
-// deklarujemy to, co wygeneruje Flex i Bison
-int yyparse();
-extern FILE* yyin;
+extern int yyparse();
+extern Statement* root_statement;
+extern void yyrestart(FILE*);
 
 int main() {
-    std::cout << "--- SQL Interpreter ---" << std::endl;
-    std::cout << "> ";
-
-    // standardowe wejście
-    yyin = stdin;
-
-    // wywołanie parsera
-    if (yyparse() == 0) {
-        std::cout << "[Sukces] Kompilacja udana." << std::endl;
-    } else {
-        std::cout << "[Blad] Cos poszlo nie tak." << std::endl;
+    std::cout << "--- SQL AST Interpreter ---" << std::endl;
+    while (true) {
+        std::cout << "SQL> ";
+        if (yyparse() == 0) {
+            if (root_statement != nullptr) {
+                root_statement->execute();
+            } else {
+                std::cout << "[DEBUG] Parser skończył, ale root_statement jest NULL!" << std::endl;
+            }
+        } else {
+            std::cout << "[DEBUG] Parser zwrócił błąd (yyparse != 0)." << std::endl;
+            yyrestart(stdin);
+        }
     }
-
     return 0;
 }
