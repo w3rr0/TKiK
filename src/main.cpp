@@ -26,10 +26,10 @@ int main() {
             if (root_statement != nullptr) {
                 root_statement->execute();
             } else {
-                std::cout << "[DEBUG] Parser skończył, ale root_statement jest NULL!" << std::endl;
+                std::cout << "[DEBUG] root statement is null" << std::endl;
             }
         } else {
-            std::cout << "[DEBUG] Parser zwrócił błąd (yyparse != 0)." << std::endl;
+            std::cout << "[DEBUG] parser error" << std::endl;
             yyrestart(stdin);
         }
     }

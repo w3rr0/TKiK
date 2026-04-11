@@ -314,5 +314,5 @@ value:
 // function that will be called automatically
 // if the user enters something that doesn't match the grammar
 void yyerror(const char *s) {
-    std::cerr << "Syntax error: " << s << std::endl;
+    std::cerr << "[ERROR] " << s << std::endl;
 }
