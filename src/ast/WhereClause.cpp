@@ -2,7 +2,7 @@
 #include <iostream>
 #include <algorithm>
 
-// helper method: removes '' or "" from text
+// helper method that removes '' or "" from text
 std::string clearQuotes(std::string s) {
     if (s.size() >= 2 && ((s.front() == '\'' && s.back() == '\'') || (s.front() == '\"' && s.back() == '\"'))) {
         return s.substr(1, s.size() - 2);
@@ -10,13 +10,13 @@ std::string clearQuotes(std::string s) {
     return s;
 }
 
-// helper method: converts safely to the num
+// helper method that converts safely to the num
 double sToD(const std::string& s) {
     try {
         return std::stod(clearQuotes(s)); // clearing before convertion
     } catch(...) { return 0; }
 }
-// ComparisonCondition
+// ComparisonCondition -> OPERATORS and LIKE
 bool ComparisonCondition::evaluate(const std::map<std::string, std::string>& row) const {
     if (row.find(column) == row.end()) return false;
     std::string v = row.at(column);
@@ -38,11 +38,12 @@ bool ComparisonCondition::evaluate(const std::map<std::string, std::string>& row
         bool startWildcard = (compareValue.front() == '%');
         bool endWildcard = (compareValue.back() == '%');
 
-        // removing '%'
+        // removing '%' after
         std::string cleanPattern = compareValue;
         if (startWildcard) cleanPattern.erase(0, 1);
         if (endWildcard) cleanPattern.pop_back();
 
+        // to extend later ...
         if (startWildcard && endWildcard) {
             return v.find(cleanPattern) != std::string::npos;
         } else if (startWildcard) {
@@ -62,7 +63,7 @@ bool ComparisonCondition::evaluate(const std::map<std::string, std::string>& row
 
 void ComparisonCondition::print() const { std::cout << column << " " << op << " " << value; }
 
-// LogicalCondition
+// LogicalCondition -> AND / OR
 bool LogicalCondition::evaluate(const std::map<std::string, std::string>& row) const {
     if (op == "AND") return left->evaluate(row) && right->evaluate(row);
     if (op == "OR") return left->evaluate(row) || right->evaluate(row);
@@ -73,7 +74,7 @@ void LogicalCondition::print() const {
     std::cout << "("; left->print(); std::cout << " " << op << " "; right->print(); std::cout << ")";
 }
 
-// BetweenCondition
+// BetweenCondition -> BETWEEN
 bool BetweenCondition::evaluate(const std::map<std::string, std::string>& row) const {
     if (row.find(column) == row.end()) return false;
     double v = sToD(row.at(column));
@@ -82,7 +83,7 @@ bool BetweenCondition::evaluate(const std::map<std::string, std::string>& row) c
 
 void BetweenCondition::print() const { std::cout << column << " BETWEEN " << valMin << " AND " << valMax; }
 
-// InCondition
+// InCondition -> IN
 bool InCondition::evaluate(const std::map<std::string, std::string>& row) const {
     if (row.find(column) == row.end()) return false;
     const std::string& v = row.at(column);

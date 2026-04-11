@@ -47,16 +47,20 @@ void SelectStmt::execute() {
 
     // AGGREGATION
     if (aggType != Aggregate::NONE) {
+        //COUNT
         if (aggType == Aggregate::COUNT) {
             std::cout << "[RESULT] COUNT: " << filteredRows.size() << std::endl;
         }
+        // SUM
         else if (aggType == Aggregate::SUM && !filteredRows.empty()) {
             double sum = 0;
             for(const auto& r : filteredRows) {
+                // summing all the values
                 try { sum += std::stod(r.at(aggColumn)); } catch(...) {}
             }
             std::cout << "[RESULT] SUM(" << aggColumn << "): " << sum << std::endl;
         }
+        // MIN MAX
         else if ((aggType == Aggregate::MIN || aggType == Aggregate::MAX) && !filteredRows.empty()) {
             double result = 0;
             bool firstFound = false;
@@ -84,7 +88,6 @@ void SelectStmt::execute() {
                 std::cout << "[RESULT] " << (aggType == Aggregate::MIN ? "MIN" : "MAX") << ": NULL (no numeric data)" << std::endl;
             }
         }
-        // Wyjście z execute(), jeśli robiliśmy agregację
         return;
     }
     // results

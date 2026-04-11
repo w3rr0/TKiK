@@ -10,7 +10,7 @@ void InsertStmt::execute() {
         return;
     }
 
-    // creating new row
+    // creating new row for now only for the mock database later to extend...
     std::map<std::string, std::string> newRow;
     if (values.size() >= 3) {
         newRow["id"] = values[0];
