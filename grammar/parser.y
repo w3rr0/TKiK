@@ -39,11 +39,10 @@ int num;
     ColumnDef* col_def;
     std::vector<ColumnDef>* col_defs;
     std::vector<std::string>* strings;
-    SelectStmt::Aggregate agg_type;
     struct {
-        SelectStmt::Aggregate type;
-        char* col;
-    } agg_val;
+            SelectStmt::Aggregate type;
+            char* col;
+    } agg;
 }
 
 // all tokens that the scanner will send and optional types in <>
@@ -70,7 +69,7 @@ int num;
 %type <col_def> column_def
 %type <str> data_type value opt_order_by
 %type <boolean> opt_distinct opt_asc_desc
-%type <agg_val> aggregate_func
+%type <agg> aggregate_func
 
 %left OR
 %left AND
@@ -98,24 +97,38 @@ instrukcja:
 // SELECT with DISTINCT and ORDER BY
 select_stmt:
     SELECT opt_distinct columns FROM ID where_clause opt_order_by opt_asc_desc {
+        // idxs: $1:SELECT, $2:opt_distinct, $3:columns, $4:FROM, $5:ID, $6:where_clause, $7:opt_order_by, $8:opt_asc_desc
         auto* sel = new SelectStmt($5, *$3, $2);
 
-        // WHERE
         if ($6) sel->setWhere(std::unique_ptr<WhereClause>($6));
-
-        // RDER BY (if $7 is not null)
         if ($7) {
             sel->setOrder($7, $8);
             free($7);
         }
 
-        // checking for aggregation
-        if (!($3->empty()) && (*$3)[0] == "AGG_MARKER") {
-            // later
-        }
-
         $$ = sel;
         free($5); delete $3;
+    }
+    | SELECT aggregate_func FROM ID where_clause opt_order_by opt_asc_desc {
+        // new idxs: $1:SELECT, $2:aggregate_func, $3:FROM, $4:ID, $5:where_clause, $6:opt_order_by, $7:opt_asc_desc
+
+        auto* stmt = new SelectStmt($4, {});
+
+        // setting aggregation
+        stmt->setAggregate($2.type, $2.col);
+
+        // WHERE
+        if ($5) stmt->setWhere(std::unique_ptr<WhereClause>($5));
+
+        // ORDER BY
+        if ($6) {
+            stmt->setOrder($6, $7);
+            free($6);
+        }
+
+        $$ = stmt;
+        free($4);
+        if ($2.col) free($2.col);
     }
     ;
 
@@ -223,7 +236,7 @@ insert_stmt:
 // DELETE
 delete_stmt:
     DELETE FROM ID where_clause {
-        auto* del = new DeleteStmt($3); // Poprawione: tylko jeden argument
+        auto* del = new DeleteStmt($3);
         if ($4) del->setWhere(std::unique_ptr<WhereClause>($4));
         $$ = del;
         free($3);
@@ -257,7 +270,7 @@ alter_table_stmt:
 
 // ORDER BY ASC / DESC
 opt_order_by:
-    /* puste */ { $$ = nullptr; }
+    /* blank */ { $$ = nullptr; }
     | ORDER BY ID { $$ = $3; } //column name
     ;
 
@@ -276,10 +289,11 @@ columns:
     ;
 
 aggregate_func:
-    COUNT LPAREN STAR RPAREN { $$.type = SelectStmt::Aggregate::COUNT; $$.col = strdup("*"); }
-    | SUM LPAREN ID RPAREN   { $$.type = SelectStmt::Aggregate::SUM; $$.col = $3; }
-    | MIN LPAREN ID RPAREN   { $$.type = SelectStmt::Aggregate::MIN; $$.col = $3; }
-    | MAX LPAREN ID RPAREN   { $$.type = SelectStmt::Aggregate::MAX; $$.col = $3; }
+      COUNT LPAREN STAR RPAREN   { $$.type = SelectStmt::Aggregate::COUNT; $$.col = strdup("*"); }
+    | COUNT LPAREN ID RPAREN     { $$.type = SelectStmt::Aggregate::COUNT; $$.col = $3; }
+    | SUM LPAREN ID RPAREN       { $$.type = SelectStmt::Aggregate::SUM;   $$.col = $3; }
+    | MIN LPAREN ID RPAREN       { $$.type = SelectStmt::Aggregate::MIN;   $$.col = $3; }
+    | MAX LPAREN ID RPAREN       { $$.type = SelectStmt::Aggregate::MAX;   $$.col = $3; }
     ;
 
 value_list:

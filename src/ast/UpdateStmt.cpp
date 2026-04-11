@@ -1,15 +1,18 @@
 #include "ast/UpdateStmt.hpp"
 #include <iostream>
+#include <map>
+
+extern std::map<std::string, std::vector<std::map<std::string, std::string>>> mockDatabase;
 
 void UpdateStmt::execute() {
-    std::cout << "[EXECUTOR] UPDATE TABLE: " << tableName << std::endl;
-    std::cout << "  - Change in column: " << colName << " Set value: " << newValue << std::endl;
+    if (mockDatabase.find(tableName) == mockDatabase.end()) return;
 
-    if (where) {
-        std::cout << "  - Condition: ";
-        where->print();
-        std::cout << std::endl;
-    } else {
-        std::cout << "  - Condition: NONE (Updating all rows)" << std::endl;
+    int updatedCount = 0;
+    for (auto& row : mockDatabase[tableName]) {
+        if (!where || where->evaluate(row)) {
+            row[colName] = newValue; // changing value in certain row
+            updatedCount++;
+        }
     }
+    std::cout << "[EXECUTOR] Updated " << updatedCount << " rows in " << tableName << std::endl;
 }

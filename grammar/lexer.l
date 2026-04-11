@@ -1,5 +1,4 @@
 %{
-// dołączamy biblioteki i plik .hpp
 #include <iostream>
 #include <string.h>
 
@@ -10,12 +9,13 @@
 
 #include "parser.hpp"
 
-// function that Bison calls to get the next token
+/* function that Bison calls to get the next token */
 int yylex();
 %}
 
 /* after reading one file it should exit */
 %option noyywrap
+%option caseless
 
 %% /* separates definitions from rules*/
     /* classic SELECT */
@@ -89,21 +89,26 @@ int yylex();
 }
 
     /* yytext, yylval -> built-in Flex variables */
-[0-9]+      { yylval.num = atoi(yytext); return NUMBER; }
+[0-9]+ {
+    yylval.num = atoi(yytext);
+    return NUMBER;
+}
 
     /* LETTERS / NUMBERS -> REGEX */
 [a-zA-Z_][a-zA-Z0-9_]* {
-    yylval.str = strdup(yytext); // copies text to yylval.str
+    std::string s(yytext);
+    for(auto & c : s) c = (unsigned char)std::tolower(c);
+    yylval.str = strdup(s.c_str());
     return ID;
 }
 
-    /* SQUARE BRACKETS */
-\'[^\']*\'  {
+    /* "" and '' service*/
+(\'[^\']*\'|\"[^\"]*\") {
     yylval.str = strdup(yytext);
     return STR;
 }
 
-    /* WHITE MARKS -> SKIP */
+    /* WHITE SPACES -> skip */
 [ \t\n]+    { /* ignore */ }
 .           { std::cerr << "Unknown char " << yytext << std::endl; }
 
