@@ -33,3 +33,5 @@ public:
 
     void execute() override;
 };
+
+static size_t getColIdx(const Table& table, const std::string& colName);

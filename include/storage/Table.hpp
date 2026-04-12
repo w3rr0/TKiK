@@ -54,6 +54,9 @@ public:
     Column& getColumn(const std::string& colName);
     const Column& getColumn(const std::string& colName) const;
 
+    // new getter for vector with Columns types
+    const std::vector<Column>& getColumns() const { return columns; }
+
     /**
      * @brief Returns the number of rows in the table.
      */

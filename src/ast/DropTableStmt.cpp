@@ -1,14 +1,16 @@
 #include "ast/DropTableStmt.hpp"
 #include <iostream>
-#include <map>
-#include <vector>
+#include "storage/Database.hpp"
+#include <stdexcept>
 
-extern std::map<std::string, std::vector<std::map<std::string, std::string>>> mockDatabase;
+extern Database db;
 
 void DropTableStmt::execute() {
-    if (mockDatabase.erase(tableName)) {
-        std::cout << "[EXECUTOR] DROP TABLE: Table '" << tableName << "' has been deleted from database" << std::endl;
-    } else {
-        std::cerr << "[ERROR] Can not delete table " << tableName << "' does not exist" << std::endl;
+    try {
+        // removes the table
+        db.dropTable(tableName);
+        std::cout << "DROP TABLE '" << tableName << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Error. DROP TABLE failed " << e.what() << std::endl;
     }
 }

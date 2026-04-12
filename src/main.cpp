@@ -1,18 +1,10 @@
 #include <iostream>
 #include "parser.hpp"
 #include "ast/Statement.hpp"
-#include <map>
-#include <vector>
+#include "storage/Database.hpp"
 
-std::map<std::string, std::vector<std::map<std::string, std::string>>> mockDatabase = {
-    {"studenci", {
-            {{"id", "1"}, {"nazwa", "Krzysztof"}, {"ocena", "5.0"}},
-            {{"id", "2"}, {"nazwa", "Jan"}, {"ocena", "3.0"}},
-            {{"id", "3"}, {"nazwa", "Anna"}, {"ocena", "4.5"}},
-            {{"id", "4"}, {"nazwa", "Marek"}, {"ocena", "2.0"}},
-            {{"id", "5"}, {"nazwa", "Zofia"}, {"ocena", "5.0"}}
-    }}
-};
+// database
+Database db("database");
 
 extern int yyparse();
 extern Statement* root_statement;

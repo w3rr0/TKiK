@@ -1,106 +1,89 @@
 #include "ast/SelectStmt.hpp"
 #include <iostream>
-#include <algorithm>
-#include <map>
 #include <set>
+#include "storage/Database.hpp"
 
-extern std::map<std::string, std::vector<std::map<std::string, std::string>>> mockDatabase;
+extern Database db;
+
+// helper method
+static size_t getColIdx(const Table& table, const std::string& colName) {
+    const auto& cols = table.getColumns();
+    for (size_t i = 0; i < cols.size(); ++i) {
+        if (cols[i].getName() == colName) return i;
+    }
+    throw std::invalid_argument("Column not found: " + colName);
+}
 
 void SelectStmt::execute() {
-    // checking if database exists
-    if (mockDatabase.find(tableName) == mockDatabase.end()) {
-        std::cerr << "[ERROR] Table '" << tableName << "' does not exist in database" << std::endl;
-        return;
-    }
+    try {
+        Table& table = db.getTable(tableName);
 
-    auto& allRows = mockDatabase[tableName];
-    std::vector<std::map<std::string, std::string>> filteredRows;
+        // vector with Cells
+        std::vector<std::vector<Cell>> filteredRows;
 
-    // filters
-    for (const auto& row : allRows) {
-        if (!where || where->evaluate(row)) {
-            filteredRows.push_back(row);
-        }
-    }
-
-    // DISTINCT
-    if (isDistinct && !filteredRows.empty()) {
-        std::set<std::map<std::string, std::string>> uniqueSet;
-        std::vector<std::map<std::string, std::string>> distinctRows;
-
-        for (const auto& row : filteredRows) {
-            if (uniqueSet.find(row) == uniqueSet.end()) {
-                uniqueSet.insert(row);
-                distinctRows.push_back(row);
+        // FILTERS
+        for (size_t i = 0; i < table.getRowCount(); ++i) {
+            std::vector<Cell> row = table.getRow(i);
+            if (!where || where->evaluate(table, row)) {
+                filteredRows.push_back(row);
             }
         }
-        filteredRows = std::move(distinctRows);
-    }
 
-    // ORDER BY
-    if (!orderByColumn.empty() && !filteredRows.empty()) {
-        std::sort(filteredRows.begin(), filteredRows.end(), [&](const auto& a, const auto& b) {
-            if (isAscending) return a.at(orderByColumn) < b.at(orderByColumn);
-            return a.at(orderByColumn) > b.at(orderByColumn);
-        });
-    }
-
-    // AGGREGATION
-    if (aggType != Aggregate::NONE) {
-        //COUNT
-        if (aggType == Aggregate::COUNT) {
-            std::cout << "[RESULT] COUNT: " << filteredRows.size() << std::endl;
-        }
-        // SUM
-        else if (aggType == Aggregate::SUM && !filteredRows.empty()) {
-            double sum = 0;
-            for(const auto& r : filteredRows) {
-                // summing all the values
-                try { sum += std::stod(r.at(aggColumn)); } catch(...) {}
+        // DISTINCT
+        if (isDistinct && !filteredRows.empty()) {
+            std::set<std::vector<Cell>> uniqueSet;
+            std::vector<std::vector<Cell>> distinctRows;
+            for (const auto& row : filteredRows) {
+                if (uniqueSet.insert(row).second) distinctRows.push_back(row);
             }
-            std::cout << "[RESULT] SUM(" << aggColumn << "): " << sum << std::endl;
+            filteredRows = std::move(distinctRows);
         }
-        // MIN MAX
-        else if ((aggType == Aggregate::MIN || aggType == Aggregate::MAX) && !filteredRows.empty()) {
-            double result = 0;
-            bool firstFound = false;
 
-            for (const auto& r : filteredRows) {
-                try {
-                    double currentVal = std::stod(r.at(aggColumn));
-                    if (!firstFound) {
-                        result = currentVal;
-                        firstFound = true;
-                    } else {
+        // AGGREGATION
+        if (aggType != Aggregate::NONE) {
+            size_t colIdx = getColIdx(table, aggColumn);
+
+            if (aggType == Aggregate::COUNT) {
+                std::cout << "[RESULT] COUNT: " << filteredRows.size() << std::endl;
+            }
+            else if (!filteredRows.empty()) {
+                if (aggType == Aggregate::SUM) {
+                    double sum = 0;
+                    for (const auto& r : filteredRows) {
+                        const Cell& c = r[colIdx];
+                        // summing as int or double
+                        if (c.getType() == Cell::INT) sum += c.as<int>();
+                        else if (c.getType() == Cell::DOUBLE) sum += c.as<double>();
+                    }
+                    std::cout << "[RESULT] SUM(" << aggColumn << "): " << sum << std::endl;
+                }
+                else if (aggType == Aggregate::MIN || aggType == Aggregate::MAX) {
+                    Cell result = filteredRows[0][colIdx]; // first Cell is both min and max at first
+
+                    for (const auto& r : filteredRows) {
+                        const Cell& current = r[colIdx];
                         if (aggType == Aggregate::MIN) {
-                            if (currentVal < result) result = currentVal;
+                            if (current < result) result = current; // operator <
                         } else {
-                            if (currentVal > result) result = currentVal;
+                            if (current > result) result = current; // operator >
                         }
                     }
-                } catch(...) { continue; }
+                    std::string label = (aggType == Aggregate::MIN) ? "MIN" : "MAX";
+                    std::cout << "[RESULT] " << label << "(" << aggColumn << "): " << result << std::endl;
+                }
             }
+            return; // end of execute()
+        }
 
-            if (firstFound) {
-                std::string label = (aggType == Aggregate::MIN) ? "MIN" : "MAX";
-                std::cout << "[RESULT] " << label << "(" << aggColumn << "): " << result << std::endl;
-            } else {
-                std::cout << "[RESULT] " << (aggType == Aggregate::MIN ? "MIN" : "MAX") << ": NULL (no numeric data)" << std::endl;
-            }
+        // DISPLAY with << operator
+        std::cout << "Found " << filteredRows.size() << " rows:" << std::endl;
+        for (const auto& row : filteredRows) {
+            std::cout << "  | ";
+            for (const auto& cell : row) std::cout << cell << " | ";
+            std::cout << std::endl;
         }
-        return;
-    }
-    // results
-    std::cout << "[RESULT] Found " << filteredRows.size() << " rows:" << std::endl;
-    for (const auto& row : filteredRows) {
-        std::cout << "  | ";
-        if (columns.size() == 1 && columns[0] == "*") {
-            for(auto const& [key, val] : row) std::cout << key << ": " << val << " | ";
-        } else {
-            for(const auto& col : columns) {
-                if(row.count(col)) std::cout << col << ": " << row.at(col) << " | ";
-            }
-        }
-        std::cout << std::endl;
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error. SELECT failed: " << e.what() << std::endl;
     }
 }

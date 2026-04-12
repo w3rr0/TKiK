@@ -1,8 +1,9 @@
 #include "ast/WhereClause.hpp"
 #include <iostream>
 #include <algorithm>
+#include <stdexcept>
 
-// helper method that removes '' or "" from text
+// helper method for removing '' and ""
 std::string clearQuotes(std::string s) {
     if (s.size() >= 2 && ((s.front() == '\'' && s.back() == '\'') || (s.front() == '\"' && s.back() == '\"'))) {
         return s.substr(1, s.size() - 2);
@@ -10,53 +11,59 @@ std::string clearQuotes(std::string s) {
     return s;
 }
 
-// helper method that converts safely to the num
-double sToD(const std::string& s) {
-    try {
-        return std::stod(clearQuotes(s)); // clearing before convertion
-    } catch(...) { return 0; }
+// helper method for finding an index of certain column from the table
+static size_t getColIdx(const Table& table, const std::string& colName) {
+    const auto& cols = table.getColumns();
+    for (size_t i = 0; i < cols.size(); ++i) {
+        if (cols[i].getName() == colName) return i;
+    }
+    throw std::invalid_argument("Column not found: " + colName);
 }
+
+// helper method that creates a Cell object with the correct type
+Cell createLiteralCell(const std::string& val, Cell::Type type) {
+    std::string clean = clearQuotes(val);
+    if (type == Cell::INT) return Cell(std::stoi(clean));
+    if (type == Cell::DOUBLE) return Cell(std::stod(clean));
+    if (type == Cell::BOOL) return Cell(clean == "true" || clean == "1");
+    return Cell(clean); // TEXT
+}
+
 // ComparisonCondition -> OPERATORS and LIKE
-bool ComparisonCondition::evaluate(const std::map<std::string, std::string>& row) const {
-    if (row.find(column) == row.end()) return false;
-    std::string v = row.at(column);
-    std::string compareValue = value;
+bool ComparisonCondition::evaluate(const Table& table, const std::vector<Cell>& row) const {
+    size_t idx = getColIdx(table, column);
+    const Cell& valInTable = row[idx];
+    Cell literal = createLiteralCell(value, table.getColumns()[idx].getType());
 
-    // removing ' ' and " "
-    if (compareValue.size() >= 2 &&
-       ((compareValue.front() == '\'' && compareValue.back() == '\'') ||
-        (compareValue.front() == '\"' && compareValue.back() == '\"'))) {
-        compareValue = compareValue.substr(1, compareValue.size() - 2);}
+    if (op == "=")  return valInTable == literal;
+    if (op == ">")  return valInTable > literal;
+    if (op == "<")  return valInTable < literal;
+    if (op == ">=") return valInTable >= literal;
+    if (op == "<=") return valInTable <= literal;
 
-    if (op == "=") return v == compareValue;
-    if (op == ">") return sToD(v) > sToD(compareValue);
-    if (op == "<") return sToD(v) < sToD(compareValue);
-    if (op == ">=") return sToD(v) >= sToD(compareValue);
-    if (op == "<=") return sToD(v) <= sToD(compareValue);
     if (op == "LIKE") {
-        // where is '%'
-        bool startWildcard = (compareValue.front() == '%');
-        bool endWildcard = (compareValue.back() == '%');
+        // LIKE requires converting from Cell to string
+        std::string v;
+        if (valInTable.getType() == Cell::TEXT) v = valInTable.as<std::string>();
+        else return false; // works only for texts
 
-        // removing '%' after
-        std::string cleanPattern = compareValue;
-        if (startWildcard) cleanPattern.erase(0, 1);
-        if (endWildcard) cleanPattern.pop_back();
+        std::string pattern = clearQuotes(value);
+        bool startWildcard = (pattern.front() == '%');
+        bool endWildcard = (pattern.back() == '%');
 
-        // to extend later ...
+        if (startWildcard) pattern.erase(0, 1);
+        if (endWildcard) pattern.pop_back();
+
         if (startWildcard && endWildcard) {
-            return v.find(cleanPattern) != std::string::npos;
-        } else if (startWildcard) {
-            // %text
-            if (v.length() < cleanPattern.length()) return false;
-            return v.compare(v.length() - cleanPattern.length(), cleanPattern.length(), cleanPattern) == 0;
-        } else if (endWildcard) {
-            // text%
-            return v.compare(0, cleanPattern.length(), cleanPattern) == 0;
-        } else {
-            // no '%'
-            return v == cleanPattern;
+            return v.find(pattern) != std::string::npos;
         }
+        if (startWildcard) {
+            return v.length() >= pattern.length() && v.compare(v.length() - pattern.length(), pattern.length(), pattern) == 0;
+        }
+        if (endWildcard) {
+            return v.compare(0, pattern.length(), pattern) == 0;
+        }
+        return v == pattern;
     }
     return false;
 }
@@ -64,9 +71,9 @@ bool ComparisonCondition::evaluate(const std::map<std::string, std::string>& row
 void ComparisonCondition::print() const { std::cout << column << " " << op << " " << value; }
 
 // LogicalCondition -> AND / OR
-bool LogicalCondition::evaluate(const std::map<std::string, std::string>& row) const {
-    if (op == "AND") return left->evaluate(row) && right->evaluate(row);
-    if (op == "OR") return left->evaluate(row) || right->evaluate(row);
+bool LogicalCondition::evaluate(const Table& table, const std::vector<Cell>& row) const {
+    if (op == "AND") return left->evaluate(table, row) && right->evaluate(table, row);
+    if (op == "OR")  return left->evaluate(table, row) || right->evaluate(table, row);
     return false;
 }
 
@@ -75,21 +82,25 @@ void LogicalCondition::print() const {
 }
 
 // BetweenCondition -> BETWEEN
-bool BetweenCondition::evaluate(const std::map<std::string, std::string>& row) const {
-    if (row.find(column) == row.end()) return false;
-    double v = sToD(row.at(column));
-    return v >= sToD(valMin) && v <= sToD(valMax);
+bool BetweenCondition::evaluate(const Table& table, const std::vector<Cell>& row) const {
+    size_t idx = getColIdx(table, column);
+    const Cell& v = row[idx];
+    Cell minL = createLiteralCell(valMin, table.getColumns()[idx].getType());
+    Cell maxL = createLiteralCell(valMax, table.getColumns()[idx].getType());
+
+    return v >= minL && v <= maxL; // Korzystamy z operatorów Konrada
 }
 
 void BetweenCondition::print() const { std::cout << column << " BETWEEN " << valMin << " AND " << valMax; }
 
 // InCondition -> IN
-bool InCondition::evaluate(const std::map<std::string, std::string>& row) const {
-    if (row.find(column) == row.end()) return false;
-    const std::string& v = row.at(column);
+bool InCondition::evaluate(const Table& table, const std::vector<Cell>& row) const {
+    size_t idx = getColIdx(table, column);
+    const Cell& v = row[idx];
+    Cell::Type type = table.getColumns()[idx].getType();
 
     for (const auto& val : values) {
-        if (v == clearQuotes(val)) return true;
+        if (v == createLiteralCell(val, type)) return true;
     }
     return false;
 }

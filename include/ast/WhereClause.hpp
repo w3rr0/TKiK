@@ -4,6 +4,10 @@
 #include <memory>
 #include <iostream>
 #include <map>
+#include <storage/Cell.hpp>
+#include <storage/Table.hpp>
+
+static size_t getColIdx(const Table& table, const std::string& colName);
 
 // All categories of WHERE conditions
 class WhereClause {
@@ -12,8 +16,7 @@ public:
 
     // called by executor for every row
     // now always true, then will be Cell / Row
-    virtual bool evaluate(const std::map<std::string, std::string>& row) const = 0;
-
+    virtual bool evaluate(const Table& table, const std::vector<Cell>& row) const = 0;
     virtual void print() const = 0;
 };
 
@@ -27,7 +30,7 @@ public:
     ComparisonCondition(std::string col, std::string oper, std::string val)
         : column(std::move(col)), op(std::move(oper)), value(std::move(val)) {}
 
-    bool evaluate(const std::map<std::string, std::string>& row) const override;
+    bool evaluate(const Table& table, const std::vector<Cell>& row) const override;
     void print() const override;
 
     const std::string& getColumn() const { return column; }
@@ -45,7 +48,7 @@ public:
     LogicalCondition(std::unique_ptr<WhereClause> l, std::string oper, std::unique_ptr<WhereClause> r)
         : left(std::move(l)), op(std::move(oper)), right(std::move(r)) {}
 
-    bool evaluate(const std::map<std::string, std::string>& row) const override;
+    bool evaluate(const Table& table, const std::vector<Cell>& row) const override;
 
     void print() const override;
 };
@@ -60,7 +63,7 @@ public:
     BetweenCondition(std::string col, std::string min, std::string max)
         : column(std::move(col)), valMin(std::move(min)), valMax(std::move(max)) {}
 
-    bool evaluate(const std::map<std::string, std::string>& row) const override;
+    bool evaluate(const Table& table, const std::vector<Cell>& row) const override;
     void print() const override;
 };
 
@@ -73,6 +76,6 @@ public:
     InCondition(std::string col, std::vector<std::string> vals)
         : column(std::move(col)), values(std::move(vals)) {}
 
-    bool evaluate(const std::map<std::string, std::string>& row) const override;
+    bool evaluate(const Table& table, const std::vector<Cell>& row) const override;
     void print() const override;
 };
