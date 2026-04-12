@@ -55,6 +55,14 @@ public:
     const Column& getColumn(const std::string& colName) const;
 
     /**
+     * @brief Updates the value of a single cell in a table.
+     * @param rowIndex Index of the row being modified.
+     * @param colName The name of the column in which we are changing the value.
+     * @param newValue New cell value.
+     */
+    void updateCell(size_t rowIndex, const std::string& colName, const Cell& newValue);
+
+    /**
      * @brief Returns the number of rows in the table.
      */
     size_t getRowCount() const;

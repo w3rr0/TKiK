@@ -22,6 +22,15 @@ public:
 
     Cell get(size_t rowIndex) const;
 
+    /**
+     * @brief Updates the value in the given row.
+     * @param rowIndex The index of the row to modify.
+     * @param newValue New value.
+     * @throws std::out_of_range If the row does not exist.
+     * @throws std::invalid_argument If the new type does not fit the column.
+     */
+    void set(size_t rowIndex, const Cell& newValue);
+
     size_t size() const;
 
     bool isNull(size_t rowIndex) const;

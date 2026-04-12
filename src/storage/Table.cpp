@@ -77,6 +77,16 @@ const Column& Table::getColumn(const std::string& colName) const {
     throw std::invalid_argument("Error: Column '" + colName + "' don't exist in table '" + name + "'.");
 }
 
+void Table::updateCell(size_t rowIndex, const std::string& colName, const Cell& newValue) {
+    if (rowIndex >= getRowCount()) {
+        throw std::out_of_range("Error UPDATE: row with index" + std::to_string(rowIndex) + " does not exist in table '" + name + "'.");
+    }
+
+    Column& col = getColumn(colName);
+
+    col.set(rowIndex, newValue);
+}
+
 size_t Table::getRowCount() const {
     if (columns.empty()) {
         return 0;
