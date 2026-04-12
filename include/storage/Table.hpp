@@ -63,6 +63,19 @@ public:
     void updateCell(size_t rowIndex, const std::string& colName, const Cell& newValue);
 
     /**
+     * @brief Marks a row as deleted (Soft Delete).
+     * @param rowIndex The index of the row to be marked.
+     */
+    void deleteRow(size_t rowIndex);
+
+    /**
+     *  @brief Checks if a row is logically deleted.
+     * @param rowIndex The index to check.
+     * @return true if the row is deleted, false otherwise.
+     */
+    bool isDeleted(size_t rowIndex) const;
+
+    /**
      * @brief Returns the number of rows in the table.
      */
     size_t getRowCount() const;
@@ -78,7 +91,17 @@ public:
     const std::string& getName() const { return name; }
 
 private:
+    /**
+     * @brief The name of the table
+     * Identification and error reporting purposes.
+     */
     std::string name;
+
+    /**
+     * @brief A bitmask marking rows as deleted
+     * 'true' means the row is deleted, 'false' means it's active.
+     */
+    std::vector<bool> deletedMask;
 
     /**
      * @brief A vector storing the column objects.

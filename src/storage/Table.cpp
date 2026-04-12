@@ -43,6 +43,8 @@ void Table::insertRow(const std::vector<Cell>& row) {
     for (size_t i = 0; i < columns.size(); ++i) {
         columns[i].add(row[i]);
     }
+
+    deletedMask.push_back(false);
 }
 
 std::vector<Cell> Table::getRow(size_t rowIndex) const {
@@ -85,6 +87,21 @@ void Table::updateCell(size_t rowIndex, const std::string& colName, const Cell& 
     Column& col = getColumn(colName);
 
     col.set(rowIndex, newValue);
+}
+
+void Table::deleteRow(size_t rowIndex) {
+    if (rowIndex >= getRowCount()) {
+        throw std::out_of_range("Error DELETE: Row index " + std::to_string(rowIndex) + " out of range.");
+    }
+
+    deletedMask[rowIndex] = true;
+}
+
+bool Table::isDeleted(size_t rowIndex) const {
+    if (rowIndex >= deletedMask.size()) { // Should not happen
+        return false;
+    }
+    return deletedMask[rowIndex];
 }
 
 size_t Table::getRowCount() const {
