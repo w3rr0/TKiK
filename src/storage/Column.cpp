@@ -72,6 +72,37 @@ Cell Column::get(size_t rowIndex) const {
     }
 }
 
+void Column::set(size_t rowIndex, const Cell& newValue) {
+    if (rowIndex >= nullMask.size()) {
+        throw std::out_of_range("Error UPDATE: Row index out of range in column '" + name + "'.");
+    }
+
+    if (newValue.getType() == Cell::Type::NULL_TYPE) {
+        nullMask[rowIndex] = true;
+        return;
+    }
+
+    if (newValue.getType() != type) {
+        throw std::invalid_argument(
+            "Type error in UPDATE for column '" + name + "'. "
+            "Expecting " + std::to_string(static_cast<int>(type)) +
+            ", received " + std::to_string(static_cast<int>(newValue.getType()))
+        );
+    }
+
+    nullMask[rowIndex] = false;
+
+    std::visit([rowIndex, &newValue](auto& vec) {
+        using VecType = std::decay_t<decltype(vec)>;
+
+        if constexpr (!std::is_same_v<VecType, std::monostate>) {
+            using ElementType = typename VecType::value_type;
+
+            vec[rowIndex] = newValue.as<ElementType>();
+        }
+    }, data);
+}
+
 size_t Column::size() const {
     // nullMask always has the same size as the data vector
     return nullMask.size();
