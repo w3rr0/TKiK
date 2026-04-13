@@ -9,6 +9,9 @@
 #include <string>
 #include <vector>
 #include "storage/Column.hpp"
+#include <cereal/access.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
 
 /**
  * @class Table
@@ -17,6 +20,8 @@
  */
 class Table {
 public:
+    Table() = default;
+
     /**
      * @brief Creates a new table.
      * @param tableName Table name.
@@ -111,6 +116,12 @@ private:
      * Memory and data management are delegated to the Column class.
      */
     std::vector<Column> columns;
+
+    friend class cereal::access;
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(name, deletedMask, columns);
+    }
 };
 
 #endif
