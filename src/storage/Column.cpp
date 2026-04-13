@@ -1,5 +1,6 @@
 #include "storage/Column.hpp"
 #include <stdexcept>
+#include <cereal/types/vector.hpp>
 
 Column::Column(std::string colName, Cell::Type colType)
     : name(std::move(colName)), type(colType)

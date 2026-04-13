@@ -9,6 +9,10 @@
 #include <string>
 #include <vector>
 #include <variant>
+#include <cereal/access.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/variant.hpp>
 #include "storage/Cell.hpp"
 
 /**
@@ -20,6 +24,7 @@
  */
 class Column {
 public:
+    Column() = default;
 
     /**
      * @brief A variant holding the actual vector of data.
@@ -99,6 +104,13 @@ private:
 
     ColumnData data;
     std::vector<bool> nullMask;
+
+    friend class cereal::access;
+
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(name, type, data, nullMask);
+    }
 };
 
 #endif
