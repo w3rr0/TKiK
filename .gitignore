@@ -6,6 +6,7 @@
 cmake-build-debug/
 CMakeFiles/
 CMakeCache.txt
+.cmake/
 
 # Grammar source files
 lexer.cpp
@@ -17,3 +18,8 @@ Interpreter-SQL
 # Clang language server
 .clangd
 compile_flags.txt
+
+# Other
+.cache/
+_deps/
+build/
