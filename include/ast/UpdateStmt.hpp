@@ -2,30 +2,39 @@
 #include "Statement.hpp"
 #include "WhereClause.hpp"
 #include <memory>
+#include "map"
 
 class UpdateStmt : public Statement {
 private:
     std::string tableName;
-    std::string colName;
-    std::string newValue;
     std::unique_ptr<WhereClause> where;
+    std::map<std::string, std::string> columnsToUpdate;
+
 
 public:
-    UpdateStmt (std::string name, std::string col, std::string val) {
+    // Constructor for single column
+    UpdateStmt(std::string name, std::string col, std::string val){
         this->tableName = std::move(name);
-        this->colName = std::move(col);
-        this->newValue = std::move(val);
+        columnsToUpdate[std::move(col)] = std::move(val);
         this->where = nullptr;
     }
 
+    // Additional constructor for many columns to update
+    UpdateStmt(std::string name, std::map<std::string, std::string> updates) {
+        this->tableName = std::move(name);
+        this->columnsToUpdate = std::move(updates);
+        this->where = nullptr;
+    }
+
+    // setter
     void setWhere(std::unique_ptr<WhereClause> w) {
         where = std::move(w);
     }
 
     void execute() override;
 
+    // getters
     const std::string& getTableName() const { return tableName; }
-    const std::string& getColName() const { return colName; }
-    const std::string& getNewValue() const { return newValue; }
+    const std::map<std::string, std::string>& getUpdates() const { return columnsToUpdate; }
     const WhereClause* getWhere() const { return where.get(); }
 };

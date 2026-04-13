@@ -12,7 +12,7 @@ private:
     std::string tableName;
     std::vector<std::string> columns;
     bool isDistinct;
-    Aggregate aggType = Aggregate::NONE;
+    Aggregate aggType;
     std::string aggColumn = "";
     std::string orderByColumn = "";
     bool isAscending = true;
@@ -23,7 +23,6 @@ public:
         this->tableName = std::move(table);
         this->columns = std::move(cols);
         this->isDistinct = distinct;
-        this->aggType = Aggregate::NONE;
     }
 
     // setters
@@ -33,5 +32,3 @@ public:
 
     void execute() override;
 };
-
-static size_t getColIdx(const Table& table, const std::string& colName);

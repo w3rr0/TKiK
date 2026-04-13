@@ -4,7 +4,7 @@
 #include <stdexcept>
 
 // helper method for removing '' and ""
-std::string clearQuotes(std::string s) {
+static std::string clearQuotes(std::string s) {
     if (s.size() >= 2 && ((s.front() == '\'' && s.back() == '\'') || (s.front() == '\"' && s.back() == '\"'))) {
         return s.substr(1, s.size() - 2);
     }

@@ -36,12 +36,13 @@ int yylex();
 "DROP"      { return DROP; }
 "COLUMN"    { return COLUMN; }
 "ALTER"     { return ALTER; }
+"ADD"       { return ADD; }
 
     /* OPERATIONS WITH STRINGS */
 "IN"        { return IN; }
 "LIKE"      { return LIKE; }
 "BETWEEN"   { return BETWEEN; }
-"IS" { return IS; }
+"IS"        { return IS; }
 
     /* ORDER BY */
 "ORDER"     { return ORDER; }

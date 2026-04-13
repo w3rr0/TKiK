@@ -16,7 +16,28 @@ void Table::addColumn(const std::string& colName, Cell::Type colType) {
         }
     }
 
-    columns.emplace_back(colName, colType);
+    Column newCol(colName, colType);
+
+    size_t rowCount = getRowCount();
+    for (size_t i = 0; i < rowCount; ++i) {
+        // new Cells with default NULL TYPE -> for ALTER TABLE ADD COLUMN
+        newCol.add(Cell());
+    }
+
+    columns.push_back(std::move(newCol));
+}
+
+void Table::dropColumn(const std::string& colName) {
+    // fidning name of the column to drop in the table
+    auto it = std::find_if(columns.begin(), columns.end(),
+        [&colName](const Column& col) { return col.getName() == colName; });
+
+    if (it == columns.end()) {
+        std::cout << "Error. ALTER TABLE: Column " << colName << " does not exist in table '" << name << "'" << std::endl;
+    }
+
+    // removing certain column if exists
+    columns.erase(it);
 }
 
 void Table::insertRow(const std::vector<Cell>& row) {

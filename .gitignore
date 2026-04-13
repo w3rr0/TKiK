@@ -19,7 +19,13 @@ Interpreter-SQL
 .clangd
 compile_flags.txt
 
+# Qt
+.qtcreator/
+
 # Other
 .cache/
 _deps/
 build/
+*.app/
+*.dSYM/
+*.user

@@ -7,8 +7,6 @@
 #include <storage/Cell.hpp>
 #include <storage/Table.hpp>
 
-static size_t getColIdx(const Table& table, const std::string& colName);
-
 // All categories of WHERE conditions
 class WhereClause {
 public:

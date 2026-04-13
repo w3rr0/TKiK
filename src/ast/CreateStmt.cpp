@@ -9,7 +9,7 @@ extern Database db;
 // helper method for mapping our data types from the stoarge
 Cell::Type mapUserType(const std::string& type) {
     if (type == "INT" || type == "INTEGER") return Cell::INT;
-    if (type == "DOUBLE" || type == "FLOAT" || type == "REAL") return Cell::DOUBLE;
+    if (type == "DOUBLE" || type == "FLOAT" || type == "NUMERIC") return Cell::DOUBLE;
     if (type == "TEXT" || type == "STRING" || type == "VARCHAR") return Cell::TEXT;
     if (type == "BOOL" || type == "BOOLEAN") return Cell::BOOL;
 
