@@ -17,3 +17,12 @@ Interpreter-SQL
 # Clang language server
 .clangd
 compile_flags.txt
+
+# Qt Creator and specific build folders
+.qtcreator/
+build/
+*.user
+
+# General artifacts from build process
+*.app/
+*.dSYM/
