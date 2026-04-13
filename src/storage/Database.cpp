@@ -4,6 +4,8 @@
  */
 
 #include "storage/Database.hpp"
+#include <fstream>
+#include <cereal/archives/binary.hpp>
 
 Database::Database(std::string dbName)
     : name(std::move(dbName)) {}
@@ -38,4 +40,24 @@ const Table& Database::getTable(const std::string& tableName) const {
 
 Table& Database::getTable(const std::string& tableName) {
     return const_cast<Table&>(static_cast<const Database*>(this)->getTable(tableName));
+}
+
+void Database::saveToFile(const std::string& filepath) const {
+    std::ofstream os(filepath, std::ios::binary);
+    if (!os.is_open()) {
+        throw std::runtime_error("Error: Could not open file for writing: " + filepath);
+    }
+
+    cereal::BinaryOutputArchive archive(os);
+    archive(*this);
+}
+
+void Database::loadFromFile(const std::string& filepath) {
+    std::ifstream is(filepath, std::ios::binary);
+    if (!is.is_open()) {
+        throw std::runtime_error("Error: Could not open file for reading: " + filepath);
+    }
+
+    cereal::BinaryInputArchive archive(is);
+    archive(*this);
 }

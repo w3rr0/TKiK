@@ -9,6 +9,9 @@
 #include <string>
 #include <unordered_map>
 #include "storage/Table.hpp"
+#include <cereal/access.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/unordered_map.hpp>
 
 /**
  * @class Database
@@ -59,6 +62,18 @@ public:
      */
     const std::string& getName() const { return name; }
 
+    /**
+     * @brief Saves the database state to a binary file.
+     * @param filepath The path where the database file will be saved.
+     */
+    void saveToFile(const std::string& filepath) const;
+
+    /**
+     * @brief Loads the database state from a binary file.
+     * @param filepath The path to the database file.
+     */
+    void loadFromFile(const std::string& filepath);
+
 private:
     std::string name;
 
@@ -67,6 +82,18 @@ private:
      * The key is the table name, the value is the Table object itself.
      */
     std::unordered_map<std::string, Table> tables;
+
+    friend class cereal::access;
+
+    Database() = default;
+
+    /**
+     * @brief Serializes the Database object using Cereal.
+     */
+    template<class Archive>
+    void serialize(Archive& archive) {
+        archive(name, tables);
+    }
 };
 
 #endif
