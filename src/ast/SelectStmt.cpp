@@ -1,6 +1,7 @@
 #include "ast/SelectStmt.hpp"
 #include <iostream>
 #include <set>
+#include <iomanip>
 #include "storage/Database.hpp"
 
 extern Database db;
@@ -17,12 +18,29 @@ static size_t getColIdx(const Table& table, const std::string& colName) {
 void SelectStmt::execute() {
     try {
         Table& table = db.getTable(tableName);
+        const auto& allTableCols = table.getColumns();
+
+        // mapping columns
+        std::vector<size_t> selectedColumns;
+        if (columns.size() == 1 && columns[0] == "*") {
+            // * -> all columns
+            for (size_t i = 0; i < allTableCols.size(); ++i) {
+                selectedColumns.push_back(i);
+            }
+        } else {
+            // certain columns
+            for (const auto& name : columns) {
+                selectedColumns.push_back(getColIdx(table, name));
+            }
+        }
 
         // vector with Cells
         std::vector<std::vector<Cell>> filteredRows;
-
         // FILTERS
         for (size_t i = 0; i < table.getRowCount(); ++i) {
+            // skipping deleted rows
+            if (table.isDeleted(i)) continue;
+
             std::vector<Cell> row = table.getRow(i);
             if (!where || where->evaluate(table, row)) {
                 filteredRows.push_back(row);
@@ -76,12 +94,29 @@ void SelectStmt::execute() {
         }
 
         // DISPLAY with << operator
-        std::cout << "Found " << filteredRows.size() << " rows:" << std::endl;
-        for (const auto& row : filteredRows) {
-            std::cout << "  | ";
-            for (const auto& cell : row) std::cout << cell << " | ";
-            std::cout << std::endl;
+        std::cout << "\nFound " << filteredRows.size() << " rows:" << std::endl;
+
+        // column names
+        std::cout << "  ";
+        for (size_t idx : selectedColumns) {
+            std::cout << "| " << std::left << std::setw(12) << allTableCols[idx].getName();
         }
+        std::cout << "|" << std::endl;
+
+        // line
+        std::cout << "  ";
+        for (size_t i = 0; i < selectedColumns.size(); ++i) std::cout << "+-------------";
+        std::cout << "+" << std::endl;
+
+        // cells with correct data
+        for (const auto& row : filteredRows) {
+            std::cout << "  ";
+            for (size_t idx : selectedColumns) {
+                std::cout << "| " << std::left << std::setw(12) << row[idx];
+            }
+            std::cout << "|" << std::endl;
+        }
+        std::cout << std::endl;
 
     } catch (const std::exception& e) {
         std::cerr << "Error. SELECT failed: " << e.what() << std::endl;

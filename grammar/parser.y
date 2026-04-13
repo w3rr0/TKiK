@@ -1,4 +1,4 @@
-%code requires {
+%code requires { // this code will be added to the parser.hpp
     #include <string>
     #include <vector>
     #include <memory>
@@ -39,6 +39,7 @@ int num;
     ColumnDef* col_def;
     std::vector<ColumnDef>* col_defs;
     std::vector<std::string>* strings;
+    std::vector<std::vector<std::string>>* multi_strings;
     struct {
             SelectStmt::Aggregate type;
             char* col;
@@ -46,7 +47,7 @@ int num;
 }
 
 // all tokens that the scanner will send and optional types in <>
-%token SELECT FROM WHERE CREATE TABLE INSERT INTO VALUES UPDATE DELETE SET DROP COLUMN ALTER
+%token SELECT FROM WHERE CREATE TABLE INSERT INTO VALUES UPDATE DELETE SET DROP COLUMN ALTER ADD
 
 %token TYPE_INT TYPE_STRING TYPE_BOOL TYPE_DOUBLE TYPE_FLOAT TYPE_NULL
 
@@ -70,6 +71,8 @@ int num;
 %type <str> data_type value opt_order_by
 %type <boolean> opt_distinct opt_asc_desc
 %type <agg> aggregate_func
+%type <multi_strings> values_lists
+%type <str> opt_column
 
 %left OR
 %left AND
@@ -216,6 +219,12 @@ column_def:
     ID data_type { $$ = new ColumnDef{$1, $2}; free($1); }
     ;
 
+// optional column for ADD (COLUMN)
+opt_column:
+    /* blank */ { $$ = nullptr; }
+    | COLUMN    { $$ = nullptr; }
+    ;
+
 // DATA TYPES
 data_type:
     TYPE_INT      { $$ = strdup("INT"); }
@@ -227,9 +236,36 @@ data_type:
 
 // INSERT INTO
 insert_stmt:
-    INSERT INTO ID VALUES LPAREN value_list RPAREN {
-        $$ = new InsertStmt($3, *$6);
-        free($3); delete $6;
+    INSERT INTO ID VALUES values_lists {
+        $$ = new InsertStmt($3, *$5);
+        delete $5;
+        free($3);
+    }
+    ;
+
+// many lists for inserting many rows
+values_lists:
+    values_lists COMMA LPAREN value_list RPAREN {
+        $1->push_back(*$4); // $1 -> vector<vector<string>>*
+        delete $4;          // $4 -> vector<string>*
+        $$ = $1;
+    }
+    | LPAREN value_list RPAREN {
+        $$ = new std::vector<std::vector<std::string>>();
+        $$->push_back(*$2);
+        delete $2;
+    }
+    ;
+
+// single list for inserting one row
+value_list:
+    value_list COMMA value {
+        $1->push_back($3);
+        $$ = $1;
+    }
+    | value {
+        $$ = new std::vector<std::string>();
+        $$->push_back($1);
     }
     ;
 
@@ -241,6 +277,7 @@ delete_stmt:
         $$ = del;
         free($3);
     }
+    ;
 
 // UPDATE
 update_stmt:
@@ -260,11 +297,22 @@ drop_table_stmt:
     DROP TABLE ID { $$ = new DropTableStmt($3); free($3); }
     ;
 
-// DROP COLUMN WITH ALTER
+// DROP COLUMN and ADD COLUMN
 alter_table_stmt:
     ALTER TABLE ID DROP COLUMN ID {
-        $$ = new AlterTableStmt($3, $6);
+        $$ = new AlterTableStmt($3, $6, AlterTableStmt::DROP);
         free($3); free($6);
+    }
+    | ALTER TABLE ID ADD opt_column ID data_type {
+        Cell::Type t = Cell::TEXT;
+        std::string st($7); // $7 to teraz data_type
+        if (st == "INT") t = Cell::INT;
+        else if (st == "DOUBLE") t = Cell::DOUBLE;
+        else if (st == "BOOL") t = Cell::BOOL;
+
+        $$ = new AlterTableStmt($3, $6, t, AlterTableStmt::ADD);
+
+        free($3); free($6); free($7);
     }
     ;
 
@@ -294,11 +342,6 @@ aggregate_func:
     | SUM LPAREN ID RPAREN       { $$.type = SelectStmt::Aggregate::SUM;   $$.col = $3; }
     | MIN LPAREN ID RPAREN       { $$.type = SelectStmt::Aggregate::MIN;   $$.col = $3; }
     | MAX LPAREN ID RPAREN       { $$.type = SelectStmt::Aggregate::MAX;   $$.col = $3; }
-    ;
-
-value_list:
-    value { $$ = new std::vector<std::string>(); $$->push_back($1); free($1); }
-    | value_list COMMA value { $1->push_back($3); $$ = $1; free($3); }
     ;
 
 value:

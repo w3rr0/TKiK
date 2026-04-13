@@ -31,6 +31,12 @@ public:
     void addColumn(const std::string& colName, Cell::Type colType);
 
     /**
+     * @brief Drops a certain column from the table schema
+     * @param colName
+     */
+    void dropColumn(const std::string& colName);
+
+    /**
      * @brief Inserts a new row of data.
      * The types must match the state in the table to be able to add a row.
      * @param row A vector of cells corresponding to the order of the columns in the table.
