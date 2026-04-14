@@ -1,4 +1,4 @@
-# nterpreter języka SQL w C++ z silnikiem bazodanowym
+# Interpreter języka SQL w C++ z silnikiem bazodanowym
 
 ---
 
