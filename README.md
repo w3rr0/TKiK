@@ -1,8 +1,8 @@
-# Projekt: Interpreter języka SQL w C++ z silnikiem bazodanowym
+# nterpreter języka SQL w C++ z silnikiem bazodanowym
 
 ---
 
-## 1. Dane autorów
+## 1. Dane
 * **Krzysztof Leśniak**
 * **Konrad Mateja**
 * **Kontakt:** 
@@ -12,8 +12,8 @@
 ---
 
 ## 2. Założenia programu
-* **Ogólne cele:** Implementacja interpretera języka SQL oraz relacyjnego silnika bazodanowego w języku C++. 
-Celem projektu jest stworzenie systemu zarządzania danymi, który oferuje pełną obsługę typów (INT, DOUBLE, TEXT, BOOL) 
+* **Ogólne cele:** Implementacja interpretera języka SQL oraz silnika bazodanowego w języku C++. 
+Celem projektu jest stworzenie systemu zarządzania danymi, który oferuje pełną obsługę typów (INT, DOUBLE, VARCHAR, BOOL) 
 oraz obsługę wartości NULL. Program umożliwia definiowanie struktur tabel (`CREATE`, `DROP`, `ALTER`) oraz manipulację 
 rekordami (`INSERT`, `UPDATE`, `DELETE`, `SELECT`).
 * **Rodzaj translatora:** Interpreter.
