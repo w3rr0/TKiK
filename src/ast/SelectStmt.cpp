@@ -21,16 +21,14 @@ void SelectStmt::execute() {
         const auto& allTableCols = table.getColumns();
 
         // mapping columns
-        std::vector<size_t> selectedColumns;
+        std::vector<size_t> projectionIdx;
         if (columns.size() == 1 && columns[0] == "*") {
-            // * -> all columns
             for (size_t i = 0; i < allTableCols.size(); ++i) {
-                selectedColumns.push_back(i);
+                projectionIdx.push_back(i);
             }
         } else {
-            // certain columns
             for (const auto& name : columns) {
-                selectedColumns.push_back(getColIdx(table, name));
+                projectionIdx.push_back(getColIdx(table, name));
             }
         }
 
@@ -47,18 +45,41 @@ void SelectStmt::execute() {
             }
         }
 
+        // ORDER BY
+        if (!orderByColumn.empty()) {
+            size_t sortIdx = getColIdx(table, orderByColumn);
+            std::sort(filteredRows.begin(), filteredRows.end(), [&](const std::vector<Cell>& a, const std::vector<Cell>& b) {
+                if (isAscending) return a[sortIdx] < b[sortIdx];
+                return a[sortIdx] > b[sortIdx];
+            });
+        }
+
         // DISTINCT
-        if (isDistinct && !filteredRows.empty()) {
-            std::set<std::vector<Cell>> uniqueSet;
-            std::vector<std::vector<Cell>> distinctRows;
-            for (const auto& row : filteredRows) {
-                if (uniqueSet.insert(row).second) distinctRows.push_back(row);
+        std::vector<std::vector<Cell>> finalRows;
+        std::set<std::vector<Cell>> uniqueSet;
+
+        for (const auto& fullRow : filteredRows) {
+            std::vector<Cell> projectedRow;
+            for (size_t idx : projectionIdx) {
+                projectedRow.push_back(fullRow[idx]);
             }
-            filteredRows = std::move(distinctRows);
+
+            if (isDistinct) {
+                if (uniqueSet.insert(projectedRow).second) {
+                    finalRows.push_back(projectedRow);
+                }
+            } else {
+                finalRows.push_back(projectedRow);
+            }
         }
 
         // AGGREGATION
         if (aggType != Aggregate::NONE) {
+            // COUNT(*)
+            if (aggType == Aggregate::COUNT && aggColumn == "*") {
+                std::cout << "[RESULT] COUNT(*): " << filteredRows.size() << std::endl;
+                return;
+            }
             size_t colIdx = getColIdx(table, aggColumn);
 
             if (aggType == Aggregate::COUNT) {
@@ -98,21 +119,21 @@ void SelectStmt::execute() {
 
         // column names
         std::cout << "  ";
-        for (size_t idx : selectedColumns) {
+        for (size_t idx : projectionIdx) {
             std::cout << "| " << std::left << std::setw(12) << allTableCols[idx].getName();
         }
         std::cout << "|" << std::endl;
 
         // line
         std::cout << "  ";
-        for (size_t i = 0; i < selectedColumns.size(); ++i) std::cout << "+-------------";
+        for (size_t i = 0; i < projectionIdx.size(); ++i) std::cout << "+-------------";
         std::cout << "+" << std::endl;
 
         // cells with correct data
-        for (const auto& row : filteredRows) {
+        for (const auto& row : finalRows) {
             std::cout << "  ";
-            for (size_t idx : selectedColumns) {
-                std::cout << "| " << std::left << std::setw(12) << row[idx];
+            for (const auto& cell : row) {
+                std::cout << "| " << std::left << std::setw(12) << cell;
             }
             std::cout << "|" << std::endl;
         }
