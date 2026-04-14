@@ -53,7 +53,7 @@ int num;
 
 %token IN LIKE BETWEEN AND OR IS
 %token DISTINCT COUNT SUM MIN MAX
-%token ORDER BY ASC DESC
+%token ORDER BY ASC DESC LIMIT OFFSET
 
 %token LPAREN RPAREN COMMA SEMICOLON
 %token STAR EQ GT GE LE LT
@@ -73,6 +73,7 @@ int num;
 %type <agg> aggregate_func
 %type <multi_strings> values_lists
 %type <str> opt_column
+%type <num> optional_limit optional_offset
 
 %left OR
 %left AND
@@ -99,7 +100,7 @@ instrukcja:
 
 // SELECT with DISTINCT and ORDER BY
 select_stmt:
-    SELECT opt_distinct columns FROM ID where_clause opt_order_by opt_asc_desc {
+    SELECT opt_distinct columns FROM ID where_clause opt_order_by opt_asc_desc optional_limit optional_offset{
         // idxs: $1:SELECT, $2:opt_distinct, $3:columns, $4:FROM, $5:ID, $6:where_clause, $7:opt_order_by, $8:opt_asc_desc
         auto* sel = new SelectStmt($5, *$3, $2);
 
@@ -108,12 +109,15 @@ select_stmt:
             sel->setOrder($7, $8);
             free($7);
         }
+        sel->limit = $9;
+        sel->offset = $10;
 
         $$ = sel;
         free($5); delete $3;
     }
-    | SELECT aggregate_func FROM ID where_clause opt_order_by opt_asc_desc {
-        // new idxs: $1:SELECT, $2:aggregate_func, $3:FROM, $4:ID, $5:where_clause, $6:opt_order_by, $7:opt_asc_desc
+    | SELECT aggregate_func FROM ID where_clause opt_order_by opt_asc_desc optional_limit optional_offset {
+        // $1:SELECT, $2:aggregate_func, $3:FROM, $4:ID, $5:where_clause,
+        // $6:opt_order_by, $7:opt_asc_desc, $8:optional_limit, $9:optional_offset
 
         auto* stmt = new SelectStmt($4, {});
 
@@ -128,6 +132,9 @@ select_stmt:
             stmt->setOrder($6, $7);
             free($6);
         }
+
+        stmt->limit = $8;
+        stmt->offset = $9;
 
         $$ = stmt;
         free($4);
@@ -327,6 +334,17 @@ opt_asc_desc:
     | ASC       { $$ = true; }
     | DESC      { $$ = false; }
     ;
+
+// LIMIT
+optional_limit:
+    LIMIT NUMBER { $$ = $2; }
+    | /* empty */ { $$ = -1; }
+
+// OFFSET
+optional_offset:
+    OFFSET NUMBER { $$ = $2; }
+    | /* empty */ { $$ = 0; }
+
 // Column aggregations
 columns:
     STAR      { $$ = new std::vector<std::string>{"*"}; }

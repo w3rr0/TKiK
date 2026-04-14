@@ -1,6 +1,6 @@
 #include "ast/WhereClause.hpp"
 #include <iostream>
-#include <algorithm>
+#include <regex>
 #include <stdexcept>
 
 // helper method for removing '' and ""
@@ -48,22 +48,27 @@ bool ComparisonCondition::evaluate(const Table& table, const std::vector<Cell>& 
         else return false; // works only for texts
 
         std::string pattern = clearQuotes(value);
-        bool startWildcard = (pattern.front() == '%');
-        bool endWildcard = (pattern.back() == '%');
+        std::string regexPattern = pattern;
 
-        if (startWildcard) pattern.erase(0, 1);
-        if (endWildcard) pattern.pop_back();
+        size_t pos = 0;
+        // changing '%' in SQL for '.*' in REGEX
+        while ((pos = regexPattern.find('%', pos)) != std::string::npos) {
+            regexPattern.replace(pos, 1, ".*");
+            pos += 2;
+        }
+        pos = 0;
+        // changing '_' in SQL for '.' in REGEX
+        while ((pos = regexPattern.find('_', pos)) != std::string::npos) {
+            regexPattern.replace(pos, 1, ".");
+            pos += 1;
+        }
 
-        if (startWildcard && endWildcard) {
-            return v.find(pattern) != std::string::npos;
+        try {
+            std::regex re(regexPattern, std::regex_constants::icase); // icase = case insensitive
+            return std::regex_match(v, re);
+        } catch (...) {
+            return false;
         }
-        if (startWildcard) {
-            return v.length() >= pattern.length() && v.compare(v.length() - pattern.length(), pattern.length(), pattern) == 0;
-        }
-        if (endWildcard) {
-            return v.compare(0, pattern.length(), pattern) == 0;
-        }
-        return v == pattern;
     }
     return false;
 }

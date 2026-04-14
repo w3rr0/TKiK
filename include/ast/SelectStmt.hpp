@@ -8,6 +8,8 @@
 class SelectStmt : public Statement {
 public:
     enum class Aggregate { NONE, COUNT, SUM, MIN, MAX };
+    int limit;
+    int offset;
 private:
     std::string tableName;
     std::vector<std::string> columns;
@@ -23,6 +25,8 @@ public:
         this->tableName = std::move(table);
         this->columns = std::move(cols);
         this->isDistinct = distinct;
+        this->limit = -1;
+        this->offset = 0;
     }
 
     // setters

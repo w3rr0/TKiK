@@ -49,6 +49,8 @@ int yylex();
 "BY"        { return BY; }
 "ASC"       { return ASC; }
 "DESC"      { return DESC; }
+"LIMIT"     { return LIMIT; }
+"OFFSET"    { return OFFSET; }
 
     /* AGGREGATE FUNCTIONS */
 "COUNT"     { return COUNT; }

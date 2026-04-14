@@ -1,8 +1,7 @@
 #include "ast/SelectStmt.hpp"
 #include <iostream>
 #include <set>
-#include <iomanip>
-#include <sstream> // Dodano dla stringstream
+#include <sstream>
 #include "storage/Database.hpp"
 
 extern Database db;
@@ -135,6 +134,20 @@ void SelectStmt::execute() {
             return; // end of execute()
         }
 
+        // OFSET
+        if (offset > 0) {
+            if (offset >= (int)finalRows.size()) {
+                finalRows.clear();
+            } else {
+                finalRows.erase(finalRows.begin(), finalRows.begin() + offset);
+            }
+        }
+
+        // LIMIT
+        if (limit >= 0 && limit < (int)finalRows.size()) {
+            finalRows.resize(limit);
+        }
+
         // data for GUI
         gui_headers.clear();
         gui_results.clear();
@@ -156,6 +169,7 @@ void SelectStmt::execute() {
         std::string msg = "SELECT: Found " + std::to_string(finalRows.size()) + " rows";
         gui_log.push_back(msg);
 
+        /*
         // column names
         std::cout << "  ";
         for (size_t idx : projectionIdx) {
@@ -177,6 +191,7 @@ void SelectStmt::execute() {
             std::cout << "|" << std::endl;
         }
         std::cout << std::endl;
+        */
 
     } catch (const std::exception& e) {
         gui_error = e.what();

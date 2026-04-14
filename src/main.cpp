@@ -41,6 +41,8 @@ int main() {
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.FontGlobalScale = 2.0f;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
@@ -76,7 +78,7 @@ int main() {
         ImGui::BeginChild("WorkspaceChild");
 
         // CONSOLE
-        ImGui::Text("SQL Terminal >");
+        ImGui::Text("SQL Terminal (Press CTRL+ENTER to execute) >");
         ImGui::SetWindowFontScale(1.4f);
 
         float input_height = ImGui::GetIO().DisplaySize.y * 0.30f;
@@ -90,13 +92,14 @@ int main() {
 
         ImGui::SetWindowFontScale(1.0f);
 
-        bool execute_pressed = ImGui::Button("Execute Query (ENTER)", ImVec2(-FLT_MIN, 45));
+        bool execute_pressed = ImGui::Button("Execute Query", ImVec2(-FLT_MIN, 45));
 
-        // ENTER
-        bool enter = is_input_active && ImGui::IsKeyPressed(ImGuiKey_Enter);
+        // CTRL + ENTER
+        bool ctrl_pressed = ImGui::GetIO().KeyCtrl || ImGui::GetIO().KeySuper;
+        bool enter_shortcut = is_input_active && ctrl_pressed && ImGui::IsKeyPressed(ImGuiKey_Enter);
 
         // if clicked button or pressed CTRL+ENTER
-        if (execute_pressed || enter) {
+        if (execute_pressed || enter_shortcut) {
             if (strlen(sql_input) > 0) {
                 gui_error = "";
                 gui_log.push_back("Executing: " + std::string(sql_input));
@@ -148,7 +151,7 @@ int main() {
         if (!gui_headers.empty() && ImGui::BeginTable("ResultsTable", (int)gui_headers.size(), ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_ScrollY | ImGuiTableFlags_Resizable)) {
 
             for (const auto& h : gui_headers) {
-                // Konwersja nagłówka na UPPERCASE
+                // UUPERCASE names of columns
                 std::string upperHeader = h;
                 std::transform(upperHeader.begin(), upperHeader.end(), upperHeader.begin(), ::toupper);
                 ImGui::TableSetupColumn(upperHeader.c_str());
@@ -169,7 +172,7 @@ int main() {
         // RIGHT COLUMN with database schema
         ImGui::NextColumn();
         ImGui::BeginChild("SchemaBrowser");
-        ImGui::TextColored(ImVec4(1.0f, 0.8f, 0.0f, 1.0f), "Database schema");
+        ImGui::TextColored(ImVec4(0.2f, 0.3f, 0.55f, 1.0f), "Database schema");
         ImGui::Separator();
 
         std::vector<std::string> tableNames = db.getTableNames();
