@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 extern Database db;
+extern std::vector<std::string> gui_log;
 
 // helper method for mapping our data types from the stoarge
 Cell::Type mapUserType(const std::string& type) {
@@ -23,7 +24,9 @@ void CreateStmt::execute() {
         // reference to our new table
         Table& table = db.getTable(tableName);
 
-        std::cout << "CREATED TABLE " << tableName << std::endl;
+        std::string msg = "CREATED TABLE " + tableName;
+        std::cout << msg << std::endl;
+        gui_log.push_back(msg);
 
         // adding columns
         for (const auto& col : columns) {
@@ -32,6 +35,7 @@ void CreateStmt::execute() {
         }
 
     } catch (const std::exception& e) {
-        std::cerr << "Error. CREATE TABLE failed " << e.what() << std::endl;
+        std::string errMsg = e.what();
+        gui_log.push_back("Error: " + errMsg);
     }
 }

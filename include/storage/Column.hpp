@@ -98,6 +98,12 @@ public:
      */
     Cell::Type getType() const { return type; }
 
+    /**
+     *
+     * @return the string type of the cell
+     */
+    std::string getTypeString() const;
+
 private:
     std::string name;
     Cell::Type type;

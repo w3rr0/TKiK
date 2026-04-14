@@ -5,6 +5,7 @@
 #include <stdexcept>
 
 extern Database db;
+extern std::vector<std::string> gui_log;
 
 // helper method for removing '' and "" from new added values
 static std::string cleanInput(std::string s) {
@@ -50,9 +51,12 @@ void InsertStmt::execute() {
             table.insertRow(rowToInsert);
             insertedCount++;
         }
-        std::cout << "INSERTED "<< insertedCount <<" new rows" << std::endl;
+        std::string msg = "INSERTED " + std::to_string(insertedCount) + " new rows";
+        std::cout << msg << std::endl;
+        gui_log.push_back(msg);
 
     } catch (const std::exception& e) {
-        std::cerr << "Error. INSERT failed: " << e.what() << std::endl;
+        std::string errMsg = e.what();
+        gui_log.push_back("Error: " + errMsg);
     }
 }

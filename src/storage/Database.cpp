@@ -34,12 +34,19 @@ const Table& Database::getTable(const std::string& tableName) const {
     if (it != tables.end()) {
         return it->second; // Value (Table object)
     }
-
     throw std::invalid_argument("Error: Table '" + tableName + "' was not found in the database.");
 }
 
 Table& Database::getTable(const std::string& tableName) {
     return const_cast<Table&>(static_cast<const Database*>(this)->getTable(tableName));
+}
+
+std::vector<std::string> Database::getTableNames() const {
+    std::vector<std::string> namesTab;
+    for (const auto& [n, table] : tables) {
+        namesTab.push_back(n);
+    }
+    return namesTab;
 }
 
 void Database::saveToFile(const std::string& filepath) const {

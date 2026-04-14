@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.20)
 project(Interpreter-SQL)
 
+add_definitions(-DGL_SILENCE_DEPRECATION)
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,6 +17,8 @@ endif()
 
 find_package(FLEX REQUIRED)
 find_package(BISON REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(glfw3 REQUIRED)
 
 BISON_TARGET(MyParser grammar/parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp)
 FLEX_TARGET(MyScanner grammar/lexer.l ${CMAKE_CURRENT_BINARY_DIR}/lexer.cpp)
@@ -26,6 +30,14 @@ set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
 set(SKIP_PERFORMANCE_COMPARISON ON CACHE BOOL "" FORCE)
 set(BUILD_TESTS OFF CACHE BOOL "Disable Cereal tests" FORCE)
 set(BUILD_SANDBOX OFF CACHE BOOL "Disable Cereal sandbox" FORCE)
+set(IMGUI_SOURCES
+        imgui_lib/imgui.cpp
+        imgui_lib/imgui_draw.cpp
+        imgui_lib/imgui_tables.cpp
+        imgui_lib/imgui_widgets.cpp
+        imgui_lib/imgui_impl_glfw.cpp
+        imgui_lib/imgui_impl_opengl3.cpp
+)
 
 FetchContent_Declare(
     cereal
@@ -36,14 +48,18 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(cereal)
 
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
+include_directories(imgui_lib)
 include_directories(include)
 
 file(GLOB_RECURSE ALL_SOURCES "src/*.cpp")
 
 add_executable(Interpreter-SQL
         ${ALL_SOURCES}
+        ${IMGUI_SOURCES}
         ${BISON_MyParser_OUTPUTS}
         ${FLEX_MyScanner_OUTPUTS}
 )
 
 target_link_libraries(Interpreter-SQL PRIVATE cereal)
+target_link_libraries(Interpreter-SQL PRIVATE glfw
+${OPENGL_LIBRARIES} "-framework Cocoa" "-framework IOKit" "-framework CoreVideo")

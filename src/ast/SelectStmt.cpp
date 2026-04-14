@@ -2,9 +2,16 @@
 #include <iostream>
 #include <set>
 #include <iomanip>
+#include <sstream> // Dodano dla stringstream
 #include "storage/Database.hpp"
 
 extern Database db;
+extern std::vector<std::string> gui_log;
+
+// Deklaracje dla interfejsu graficznego
+extern std::vector<std::vector<std::string>> gui_results;
+extern std::vector<std::string> gui_headers;
+extern std::string gui_error;
 
 // helper method
 static size_t getColIdx(const Table& table, const std::string& colName) {
@@ -75,15 +82,25 @@ void SelectStmt::execute() {
 
         // AGGREGATION
         if (aggType != Aggregate::NONE) {
+            gui_headers.clear();
+            gui_results.clear();
+            gui_headers.push_back("RESULT");
+            std::vector<std::string> gui_row;
+            std::stringstream res_ss;
+
             // COUNT(*)
             if (aggType == Aggregate::COUNT && aggColumn == "*") {
                 std::cout << "[RESULT] COUNT(*): " << filteredRows.size() << std::endl;
+                res_ss << "COUNT(*): " << filteredRows.size();
+                gui_row.push_back(res_ss.str());
+                gui_results.push_back(gui_row);
                 return;
             }
             size_t colIdx = getColIdx(table, aggColumn);
 
             if (aggType == Aggregate::COUNT) {
                 std::cout << "[RESULT] COUNT: " << filteredRows.size() << std::endl;
+                res_ss << "COUNT(" << aggColumn << "): " << filteredRows.size();
             }
             else if (!filteredRows.empty()) {
                 if (aggType == Aggregate::SUM) {
@@ -95,6 +112,7 @@ void SelectStmt::execute() {
                         else if (c.getType() == Cell::DOUBLE) sum += c.as<double>();
                     }
                     std::cout << "[RESULT] SUM(" << aggColumn << "): " << sum << std::endl;
+                    res_ss << "SUM(" << aggColumn << "): " << sum;
                 }
                 else if (aggType == Aggregate::MIN || aggType == Aggregate::MAX) {
                     Cell result = filteredRows[0][colIdx]; // first Cell is both min and max at first
@@ -109,13 +127,34 @@ void SelectStmt::execute() {
                     }
                     std::string label = (aggType == Aggregate::MIN) ? "MIN" : "MAX";
                     std::cout << "[RESULT] " << label << "(" << aggColumn << "): " << result << std::endl;
+                    res_ss << label << "(" << aggColumn << "): " << result;
                 }
             }
+            gui_row.push_back(res_ss.str());
+            gui_results.push_back(gui_row);
             return; // end of execute()
+        }
+
+        // data for GUI
+        gui_headers.clear();
+        gui_results.clear();
+        for (size_t idx : projectionIdx) {
+            gui_headers.push_back(allTableCols[idx].getName());
+        }
+        for (const auto& row : finalRows) {
+            std::vector<std::string> gui_row;
+            for (const auto& cell : row) {
+                std::stringstream ss;
+                ss << cell;
+                gui_row.push_back(ss.str());
+            }
+            gui_results.push_back(gui_row);
         }
 
         // DISPLAY with << operator
         std::cout << "\nFound " << filteredRows.size() << " rows:" << std::endl;
+        std::string msg = "SELECT: Found " + std::to_string(finalRows.size()) + " rows";
+        gui_log.push_back(msg);
 
         // column names
         std::cout << "  ";
@@ -140,6 +179,9 @@ void SelectStmt::execute() {
         std::cout << std::endl;
 
     } catch (const std::exception& e) {
-        std::cerr << "Error. SELECT failed: " << e.what() << std::endl;
+        gui_error = e.what();
+        std::string errMsg = "Error. SELECT failed: " + gui_error;
+        gui_log.push_back(errMsg);
+
     }
 }
