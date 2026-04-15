@@ -36,3 +36,9 @@ build/
 .ninja_deps
 .ninja_log
 build.ninja
+
+# imgui
+imgui.ini
+
+# test directory
+Testing/
