@@ -1,17 +1,10 @@
-# Interpreter języka SQL w C++ z silnikiem bazodanowym
+# sqW database
 
----
 
-## 1. Dane
-* **Krzysztof Leśniak**
-* **Konrad Mateja**
-* **Kontakt:** 
-  * krlesniak@student.agh.edu.pl
-  * kmateja@student.agh.edu.pl
+Autorski interpreter języka SQL oraz lokalny silnik bazodanowy zaimplementowany w C++.
+Program pozwala na zarządzanie strukturą tabel oraz manipulację danymi i wykonywanie zapytań.
 
----
-
-## 2. Założenia programu
+## Założenia programu
 * **Ogólne cele:** Implementacja interpretera języka SQL oraz silnika bazodanowego w języku C++. 
 Celem projektu jest stworzenie systemu zarządzania danymi, który oferuje pełną obsługę typów (INT, DOUBLE, VARCHAR, BOOL) 
 oraz obsługę wartości NULL. Program umożliwia definiowanie struktur tabel (`CREATE`, `DROP`, `ALTER`) oraz manipulację 
@@ -25,7 +18,7 @@ danych (NULL) oraz prezentację wyników zapytań wraz z ich filtrowaniem i agre
 
 ---
 
-## 3. Opis tokenów
+## Dialect
 Poniższa tabela zawiera spis tokenów zdefiniowanych w skanerze `lexer.l`.
 
 | Kategoria | Tokeny                                                                                                                         | Opis                                                                                         |
@@ -39,13 +32,56 @@ Poniższa tabela zawiera spis tokenów zdefiniowanych w skanerze `lexer.l`.
 
 ---
 
-## 4. Gramatyka projektu (Notacja Bison)
+## Prerequisites
+
+To build this project, you need to have the following tools installed:
+
+* **Bison**
+* **Flex**
+* **GLFW**
+
+  ```shell
+  sudo apt install bison flex libglfw3-dev    # Linux (Debian)
+  ```
+
+  ```shell
+  brew install bison flex glfw                # MacOS
+  ```
+  
+---
+
+## Getting Started
+
+Follow these steps to build and run the application from the root directory.
+
+1. **Configure the project** \
+   Create a build directory and configure the project using CMake:
+   ```shell
+   cmake -S . -B build
+   ```
+2. **Build the application** \
+   Compile the source code:
+   ```shell
+    cmake --build build
+   ```
+3. **Run the application** \
+   After a successful build, you can run the executable.
+   ```shell
+   ./build/Interpreter-SQL             # Linux / MacOS
+   ```
+   ```powershell
+   .\build\Debug\Interpreter-SQL.exe   # Windows
+   ```
+
+---
+
+## Gramatyka projektu (Notacja Bison)
 Pełna gramatyka znajduje się w pliku: 
 **[grammar/parser.y](./grammar/parser.y)**
 
 ---
 
-## 5. Project Structure
+## Project Structure
 
 ```
 TKiK/
@@ -76,3 +112,20 @@ TKiK/
     │   └── ...
     └── main.cpp
 ```
+
+---
+
+## License
+
+The program is licensed under the MIT license.
+Details in the [License](LICENSE) file
+
+---
+
+## Contact
+
+[Krzysztof Leśniak](https://github.com/krlesniak) \
+[krlesniak@student.agh.edu.pl](mailto:krlesniak@student.agh.edu.pl)
+
+[Konrad Mateja](https://github.com/w3rr0) \
+[kmateja@student.agh.edu.pl](mailto:kmateja@student.agh.edu.pl)
