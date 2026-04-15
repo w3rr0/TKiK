@@ -64,6 +64,18 @@ public:
     Table& getTable(const std::string& tableName);
 
     /**
+     * @brief Performs VACUUM on all tables in the database.
+     */
+    void vacuum();
+
+    /**
+     * @brief Performs VACUUM on a specific table.
+     * @param tableName The name of the table to clean.
+     * @throws std::invalid_argument If the table does not exist.
+     */
+    void vacuum(const std::string& tableName);
+
+    /**
      * @brief Returns the database name.
      */
     const std::string& getName() const { return name; }
