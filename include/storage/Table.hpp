@@ -95,6 +95,12 @@ public:
     size_t getRowCount() const;
 
     /**
+     * @brief Physically removes all logically deleted rows from memory.
+     * Reclaims RAM and compacts the storage vectors.
+     */
+    void vacuum();
+
+    /**
      * @brief Returns the number of columns in the table.
      */
     size_t getColumnCount() const { return columns.size(); }

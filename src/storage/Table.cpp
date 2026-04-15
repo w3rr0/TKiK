@@ -131,3 +131,16 @@ size_t Table::getRowCount() const {
     }
     return columns[0].size();
 }
+
+void Table::vacuum() {
+    for (auto& col : columns) {
+        col.vacuum(deletedMask);
+    }
+
+    size_t aliveCount = 0;
+    for (bool isDeleted : deletedMask) {
+        if (!isDeleted) aliveCount++;
+    }
+
+    deletedMask = std::vector<bool>(aliveCount, false);
+}
