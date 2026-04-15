@@ -115,3 +115,50 @@ bool Column::isNull(size_t rowIndex) const {
     }
     return nullMask[rowIndex];
 }
+
+void Column::vacuum(const std::vector<bool>& deletedMask) {
+    size_t aliveCount = 0;
+    for (bool isDeleted : deletedMask) {
+        if (!isDeleted) aliveCount++;
+    }
+
+    if (aliveCount == deletedMask.size()) return;
+
+    std::vector<bool> newNullMask;
+    newNullMask.reserve(aliveCount);
+    for (size_t i = 0; i < deletedMask.size(); ++i) {
+        if (!deletedMask[i]) {
+            newNullMask.push_back(nullMask[i]);
+        }
+    }
+
+    ColumnData newData;
+    switch (type) {
+        case Cell::Type::INT:    newData = std::vector<int>(); std::get<std::vector<int>>(newData).reserve(aliveCount); break;
+        case Cell::Type::DOUBLE: newData = std::vector<double>(); std::get<std::vector<double>>(newData).reserve(aliveCount); break;
+        case Cell::Type::TEXT:   newData = std::vector<std::string>(); std::get<std::vector<std::string>>(newData).reserve(aliveCount); break;
+        case Cell::Type::BOOL:   newData = std::vector<bool>(); std::get<std::vector<bool>>(newData).reserve(aliveCount); break;
+        default: break;
+    }
+
+    std::visit([&](auto& oldVec) {
+        using VecType = std::decay_t<decltype(oldVec)>;
+
+        if constexpr (!std::is_same_v<VecType, std::monostate>) {
+            auto& newVec = std::get<VecType>(newData);
+
+            for (size_t i = 0; i < deletedMask.size(); ++i) {
+                if (!deletedMask[i]) {
+                    if constexpr (std::is_same_v<VecType, std::vector<std::string>>) {
+                        newVec.push_back(std::move(oldVec[i]));
+                    } else {
+                        newVec.push_back(oldVec[i]);
+                    }
+                }
+            }
+        }
+    }, data);
+
+    data = std::move(newData);
+    nullMask = std::move(newNullMask);
+}

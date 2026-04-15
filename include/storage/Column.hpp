@@ -84,6 +84,13 @@ public:
      */
     bool isNull(size_t rowIndex) const;
 
+    /**
+     * @brief Performs physical deletion of rows marked as deleted.
+     * Rebuilds internal storage to free up memory (Copy-and-Swap).
+     * @param deletedMask A bitmask where 'true' means the row should be destroyed.
+     */
+    void vacuum(const std::vector<bool>& deletedMask);
+
     // Getters
 
     /**
