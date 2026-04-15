@@ -51,12 +51,12 @@ int num;
 
 %token TYPE_INT TYPE_STRING TYPE_BOOL TYPE_DOUBLE TYPE_FLOAT TYPE_NULL
 
-%token IN LIKE BETWEEN AND OR IS
+%token IN LIKE BETWEEN AND OR IS NOT
 %token DISTINCT COUNT SUM MIN MAX
 %token ORDER BY ASC DESC LIMIT OFFSET
 
 %token LPAREN RPAREN COMMA SEMICOLON
-%token STAR EQ GT GE LE LT
+%token STAR EQ GT GE LE LT NEQ
 
 %token <num> NUMBER
 %token <str> ID STR
@@ -158,6 +158,10 @@ condition:
         $$ = new ComparisonCondition($1, "=", $3);
         free($1); free($3);
     }
+    | ID NEQ value {
+            $$ = new ComparisonCondition($1, "!=", $3);
+            free($1); free($3);
+    }
     | ID GT value {
         $$ = new ComparisonCondition($1, ">", $3);
         free($1); free($3);
@@ -178,10 +182,18 @@ condition:
         $$ = new ComparisonCondition($1, "IS", "NULL");
         free($1);
     }
+    | ID IS NOT TYPE_NULL {
+            $$ = new ComparisonCondition($1, "IS NOT", "NULL");
+            free($1);
+        }
     | ID LIKE STR {
         $$ = new ComparisonCondition($1, "LIKE", $3);
         free($1); free($3);
     }
+    | ID NOT LIKE STR {
+            $$ = new ComparisonCondition($1, "NOT LIKE", $4);
+            free($1); free($4);
+        }
     | ID IN LPAREN value_list RPAREN {
         $$ = new InCondition($1, *$4);
         free($1); delete $4;

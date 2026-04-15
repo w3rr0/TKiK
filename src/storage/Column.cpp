@@ -120,7 +120,7 @@ std::string Column::getTypeString() const {
     switch (type) {
         case Cell::INT:    return "INT";
         case Cell::DOUBLE: return "DOUBLE";
-        case Cell::TEXT:   return "TEXT";
+        case Cell::TEXT:   return "VARCHAR";
         case Cell::BOOL:   return "BOOL";
         default:           return "UNKNOWN";
     }

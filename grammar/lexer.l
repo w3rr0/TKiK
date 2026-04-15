@@ -43,6 +43,7 @@ int yylex();
 "LIKE"      { return LIKE; }
 "BETWEEN"   { return BETWEEN; }
 "IS"        { return IS; }
+"NOT"       { return NOT; }
 
     /* ORDER BY */
 "ORDER"     { return ORDER; }
@@ -77,6 +78,7 @@ int yylex();
 ">="        { return GE; }
 "<="        { return LE; }
 "<"         { return LT; }
+"!="        { return NEQ; }
 "AND"       { return AND; }
 "OR"        { return OR; }
 
