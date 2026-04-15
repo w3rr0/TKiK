@@ -30,26 +30,36 @@ set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
 set(SKIP_PERFORMANCE_COMPARISON ON CACHE BOOL "" FORCE)
 set(BUILD_TESTS OFF CACHE BOOL "Disable Cereal tests" FORCE)
 set(BUILD_SANDBOX OFF CACHE BOOL "Disable Cereal sandbox" FORCE)
-set(IMGUI_SOURCES
-        imgui_lib/imgui.cpp
-        imgui_lib/imgui_draw.cpp
-        imgui_lib/imgui_tables.cpp
-        imgui_lib/imgui_widgets.cpp
-        imgui_lib/imgui_impl_glfw.cpp
-        imgui_lib/imgui_impl_opengl3.cpp
-)
 
+# Cereal
 FetchContent_Declare(
     cereal
     GIT_REPOSITORY https://github.com/USCiLab/cereal.git
     GIT_TAG        v1.3.2
 )
-
 FetchContent_MakeAvailable(cereal)
 
+# Imgui
+FetchContent_Declare(
+        imgui
+        GIT_REPOSITORY https://github.com/ocornut/imgui.git
+        GIT_TAG        v1.90.4
+)
+FetchContent_MakeAvailable(imgui)
+
+set(IMGUI_SOURCES
+        ${imgui_SOURCE_DIR}/imgui.cpp
+        ${imgui_SOURCE_DIR}/imgui_draw.cpp
+        ${imgui_SOURCE_DIR}/imgui_tables.cpp
+        ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
-include_directories(imgui_lib)
 include_directories(include)
+include_directories(${imgui_SOURCE_DIR})
+include_directories(${imgui_SOURCE_DIR}/backends)
 
 file(GLOB_RECURSE ALL_SOURCES "src/*.cpp")
 
