@@ -49,6 +49,8 @@ int yylex();
 "BY"        { return BY; }
 "ASC"       { return ASC; }
 "DESC"      { return DESC; }
+"LIMIT"     { return LIMIT; }
+"OFFSET"    { return OFFSET; }
 
     /* AGGREGATE FUNCTIONS */
 "COUNT"     { return COUNT; }
@@ -58,10 +60,12 @@ int yylex();
 
     /* data types for CREATE TABLE*/
 "INT"       { return TYPE_INT; }
+"INTEGER"   { return TYPE_INT; }
 "STRING"    { return TYPE_STRING; }
 "TEXT"      { return TYPE_STRING; }
 "VARCHAR"    { return TYPE_STRING; }
 "BOOLEAN"    { return TYPE_BOOL; }
+"BOOL"       { return TYPE_BOOL; }
 "DOUBLE"     { return TYPE_DOUBLE; }
 "FLOAT"      { return TYPE_FLOAT; }
 "NULL"      { return TYPE_NULL; }

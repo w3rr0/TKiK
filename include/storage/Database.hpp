@@ -53,6 +53,12 @@ public:
     const Table& getTable(const std::string& tableName) const;
 
     /**
+     *
+     * @return list of all tables in database.
+     */
+    std::vector<std::string> getTableNames() const;
+
+    /**
      * @brief Gets a modifiable reference to a table.
      */
     Table& getTable(const std::string& tableName);

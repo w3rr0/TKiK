@@ -1,8 +1,8 @@
-# Projekt: Interpreter języka SQL w C++ z silnikiem bazodanowym
+# Interpreter języka SQL w C++ z silnikiem bazodanowym
 
 ---
 
-## 1. Dane autorów
+## 1. Dane
 * **Krzysztof Leśniak**
 * **Konrad Mateja**
 * **Kontakt:** 
@@ -12,8 +12,8 @@
 ---
 
 ## 2. Założenia programu
-* **Ogólne cele:** Implementacja interpretera języka SQL oraz relacyjnego silnika bazodanowego w języku C++. 
-Celem projektu jest stworzenie systemu zarządzania danymi, który oferuje pełną obsługę typów (INT, DOUBLE, TEXT, BOOL) 
+* **Ogólne cele:** Implementacja interpretera języka SQL oraz silnika bazodanowego w języku C++. 
+Celem projektu jest stworzenie systemu zarządzania danymi, który oferuje pełną obsługę typów (INT, DOUBLE, VARCHAR, BOOL) 
 oraz obsługę wartości NULL. Program umożliwia definiowanie struktur tabel (`CREATE`, `DROP`, `ALTER`) oraz manipulację 
 rekordami (`INSERT`, `UPDATE`, `DELETE`, `SELECT`).
 * **Rodzaj translatora:** Interpreter.
@@ -32,8 +32,8 @@ Poniższa tabela zawiera spis tokenów zdefiniowanych w skanerze `lexer.l`.
 | :--- |:-------------------------------------------------------------------------------------------------------------------------------|:---------------------------------------------------------------------------------------------|
 | **Słowa kluczowe (DML/DDL)** | `SELECT`, `FROM`, `WHERE`, `CREATE`, `TABLE`, `INSERT`, `INTO`, `VALUES`, `UPDATE`, `DELETE`, `SET`, `DROP`, `COLUMN`, `ALTER` | Podstawowe komendy zarządzania danymi i strukturą.                                           |
 | **Logika i Filtrowanie** | `IN`, `LIKE`, `BETWEEN`, `AND`, `OR`                                                                                           | Operatory warunkowe używane w klauzuli WHERE.                                                |
-| **Agregacja i Sortowanie** | `COUNT`, `SUM`, `MIN`, `MAX`, `ORDER`, `BY`, `ASC`, `DESC`, `DISTINCT`                                                         | Funkcje obliczeniowe i sterowanie prezentacją danych.                                        |
-| **Typy Danych** | `INT`, `STRING`, `BOOL`, `DOUBLE`, `FLOAT`, `NULL`                                               | Obsługiwane typy kolumn w komendzie CREATE TABLE.                                            |
+| **Agregacja i Sortowanie** | `COUNT`, `SUM`, `MIN`, `MAX`, `ORDER`, `BY`, `ASC`, `DESC`, `DISTINCT`, `LIMIT`, `OFFSET`                                      | Funkcje obliczeniowe i sterowanie prezentacją danych.                                        |
+| **Typy Danych** | `INT`, `STRING`, `BOOL`, `DOUBLE`, `FLOAT`, `NULL`                                                                             | Obsługiwane typy kolumn w komendzie CREATE TABLE.                                            |
 | **Operatory i Symbole** | `STAR` (*), `EQ` (=), `GT` (>), `GE` (>=), `LE` (<=), `LT` (<), `LPAREN` ('('), `RPAREN` (')'), `COMMA` (,), `SEMICOLON` (;)   | Operatory porównania i znaki interpunkcyjne SQL.                                             |
 | **Wartości i Nazwy** | `NUMBER`, `ID`, `STR`                                                                                                          | Liczby całkowite, identyfikatory (nazwy) oraz napisy w apostrofach.           |
 

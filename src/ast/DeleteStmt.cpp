@@ -3,6 +3,7 @@
 #include "storage/Database.hpp"
 
 extern Database db;
+extern std::vector<std::string> gui_log;
 
 void DeleteStmt::execute() {
     try {
@@ -21,8 +22,12 @@ void DeleteStmt::execute() {
                 deleteCount++;
             }
         }
-        std::cout << "DELETED " << deleteCount << " rows:" << std::endl;
+        std::string msg = "DELETED " + std::to_string(deleteCount) + " rows";
+        std::cout << msg << std::endl;
+        gui_log.push_back(msg);
+
     } catch (const std::exception& e) {
-        std::cout << "Error. DELETE failed " << e.what() << std::endl;
+        std::string errMsg = e.what();
+        gui_log.push_back("Error: " + errMsg);
     }
 }

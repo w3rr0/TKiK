@@ -116,6 +116,16 @@ bool Column::isNull(size_t rowIndex) const {
     return nullMask[rowIndex];
 }
 
+std::string Column::getTypeString() const {
+    switch (type) {
+        case Cell::INT:    return "INT";
+        case Cell::DOUBLE: return "DOUBLE";
+        case Cell::TEXT:   return "TEXT";
+        case Cell::BOOL:   return "BOOL";
+        default:           return "UNKNOWN";
+    }
+}
+
 void Column::vacuum(const std::vector<bool>& deletedMask) {
     size_t aliveCount = 0;
     for (bool isDeleted : deletedMask) {

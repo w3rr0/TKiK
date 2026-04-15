@@ -4,6 +4,7 @@
 #include <storage/Database.hpp>
 
 extern Database db;
+extern std::vector<std::string> gui_log;
 
 // method for cleaning '' / ""
 static std::string clearQuotes(std::string s) {
@@ -44,8 +45,12 @@ void UpdateStmt::execute() {
                 updateCount++;
             }
         }
-        std::cout << "UPDATED " << updateCount << " rows" << std::endl;
+        std::string msg = "UPDATED " + std::to_string(updateCount) + " rows";
+        std::cout << msg << std::endl;
+        gui_log.push_back(msg);
+
     } catch (const std::exception& e) {
-        std::cout <<"Error. UPDATE failed " << e.what() << std::endl;
+        std::string errMsg = e.what();
+        gui_log.push_back("Error: " + errMsg);
     }
 }

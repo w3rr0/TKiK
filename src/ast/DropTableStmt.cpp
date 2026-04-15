@@ -4,13 +4,18 @@
 #include <stdexcept>
 
 extern Database db;
+extern std::vector<std::string> gui_log;
 
 void DropTableStmt::execute() {
     try {
         // removes the table
         db.dropTable(tableName);
-        std::cout << "DROP TABLE '" << tableName << std::endl;
+
+        std::string msg = "DROP TABLE " + tableName;
+        std::cout << msg << std::endl;
+        gui_log.push_back(msg);
     } catch (const std::exception& e) {
-        std::cerr << "Error. DROP TABLE failed " << e.what() << std::endl;
+        std::string errMsg = "Error while executing DROP TABLE " + tableName;
+        gui_log.push_back(errMsg);
     }
 }
