@@ -2,6 +2,8 @@
 #include <iostream>
 #include <regex>
 #include <stdexcept>
+#include "storage/Cell.hpp"
+
 
 // helper method for removing '' and ""
 static std::string clearQuotes(std::string s) {
@@ -23,6 +25,10 @@ static size_t getColIdx(const Table& table, const std::string& colName) {
 // helper method that creates a Cell object with the correct type
 Cell createLiteralCell(const std::string& val, Cell::Type type) {
     std::string clean = clearQuotes(val);
+
+    if (clean == "NULL" || clean == "null") {
+        return Cell();
+    }
     if (type == Cell::INT) return Cell(std::stoi(clean));
     if (type == Cell::DOUBLE) return Cell(std::stod(clean));
     if (type == Cell::BOOL) return Cell(clean == "true" || clean == "1");
@@ -40,8 +46,16 @@ bool ComparisonCondition::evaluate(const Table& table, const std::vector<Cell>& 
     if (op == "<")  return valInTable < literal;
     if (op == ">=") return valInTable >= literal;
     if (op == "<=") return valInTable <= literal;
+    if (op == "!=") return valInTable != literal;
 
-    if (op == "LIKE") {
+    if (op == "IS") {
+        return valInTable.getType() == Cell::Type::NULL_TYPE;
+    }
+    if (op == "IS NOT") {
+        return valInTable.getType() != Cell::Type::NULL_TYPE;
+    }
+
+    if (op == "LIKE" || op == "NOT LIKE") {
         // LIKE requires converting from Cell to string
         std::string v;
         if (valInTable.getType() == Cell::TEXT) v = valInTable.as<std::string>();
@@ -65,7 +79,10 @@ bool ComparisonCondition::evaluate(const Table& table, const std::vector<Cell>& 
 
         try {
             std::regex re(regexPattern, std::regex_constants::icase); // icase = case insensitive
-            return std::regex_match(v, re);
+
+            bool isMatch = std::regex_match(v, re);
+            // if NOT LIKE -> !isMatch
+            return (op == "NOT LIKE") ? !isMatch : isMatch;
         } catch (...) {
             return false;
         }
