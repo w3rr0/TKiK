@@ -49,6 +49,16 @@ std::vector<std::string> Database::getTableNames() const {
     return namesTab;
 }
 
+void Database::vacuum() {
+    for (auto& pair : tables) {
+        pair.second.vacuum();
+    }
+}
+
+void Database::vacuum(const std::string& tableName) {
+    getTable(tableName).vacuum();
+}
+
 void Database::saveToFile(const std::string& filepath) const {
     std::ofstream os(filepath, std::ios::binary);
     if (!os.is_open()) {
