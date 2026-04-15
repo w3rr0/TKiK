@@ -7,6 +7,8 @@ cmake-build-debug/
 CMakeFiles/
 CMakeCache.txt
 .cmake/
+*.cmake
+compile_commands.json
 
 # Grammar source files
 lexer.cpp
@@ -29,3 +31,8 @@ build/
 *.app/
 *.dSYM/
 *.user
+
+# Ninja files
+.ninja_deps
+.ninja_log
+build.ninja
