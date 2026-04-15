@@ -78,7 +78,7 @@ private:
     std::string name;
 
     /**
-     * @brief Hash map stores tabele.
+     * @brief Hash map stores table.
      * The key is the table name, the value is the Table object itself.
      */
     std::unordered_map<std::string, Table> tables;
