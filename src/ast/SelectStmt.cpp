@@ -89,7 +89,7 @@ void SelectStmt::execute() {
 
             // COUNT(*)
             if (aggType == Aggregate::COUNT && aggColumn == "*") {
-                std::cout << "[RESULT] COUNT(*): " << filteredRows.size() << std::endl;
+                std::cout << "COUNT(*): " << filteredRows.size() << std::endl;
                 res_ss << "COUNT(*): " << filteredRows.size();
                 gui_row.push_back(res_ss.str());
                 gui_results.push_back(gui_row);
@@ -98,7 +98,7 @@ void SelectStmt::execute() {
             size_t colIdx = getColIdx(table, aggColumn);
 
             if (aggType == Aggregate::COUNT) {
-                std::cout << "[RESULT] COUNT: " << filteredRows.size() << std::endl;
+                std::cout << "COUNT: " << filteredRows.size() << std::endl;
                 res_ss << "COUNT(" << aggColumn << "): " << filteredRows.size();
             }
             else if (!filteredRows.empty()) {
@@ -110,7 +110,7 @@ void SelectStmt::execute() {
                         if (c.getType() == Cell::INT) sum += c.as<int>();
                         else if (c.getType() == Cell::DOUBLE) sum += c.as<double>();
                     }
-                    std::cout << "[RESULT] SUM(" << aggColumn << "): " << sum << std::endl;
+                    std::cout << "SUM(" << aggColumn << "): " << sum << std::endl;
                     res_ss << "SUM(" << aggColumn << "): " << sum;
                 }
                 else if (aggType == Aggregate::MIN || aggType == Aggregate::MAX) {
@@ -125,7 +125,7 @@ void SelectStmt::execute() {
                         }
                     }
                     std::string label = (aggType == Aggregate::MIN) ? "MIN" : "MAX";
-                    std::cout << "[RESULT] " << label << "(" << aggColumn << "): " << result << std::endl;
+                    std::cout << label << "(" << aggColumn << "): " << result << std::endl;
                     res_ss << label << "(" << aggColumn << "): " << result;
                 }
             }
@@ -169,33 +169,9 @@ void SelectStmt::execute() {
         std::string msg = "SELECT: Found " + std::to_string(finalRows.size()) + " rows";
         gui_log.push_back(msg);
 
-        /*
-        // column names
-        std::cout << "  ";
-        for (size_t idx : projectionIdx) {
-            std::cout << "| " << std::left << std::setw(12) << allTableCols[idx].getName();
-        }
-        std::cout << "|" << std::endl;
-
-        // line
-        std::cout << "  ";
-        for (size_t i = 0; i < projectionIdx.size(); ++i) std::cout << "+-------------";
-        std::cout << "+" << std::endl;
-
-        // cells with correct data
-        for (const auto& row : finalRows) {
-            std::cout << "  ";
-            for (const auto& cell : row) {
-                std::cout << "| " << std::left << std::setw(12) << cell;
-            }
-            std::cout << "|" << std::endl;
-        }
-        std::cout << std::endl;
-        */
-
     } catch (const std::exception& e) {
         gui_error = e.what();
-        std::string errMsg = "Error. SELECT failed: " + gui_error;
+        std::string errMsg = "SELECT failed: " + gui_error;
         gui_log.push_back(errMsg);
 
     }

@@ -42,3 +42,6 @@ imgui.ini
 
 # test directory
 Testing/
+
+# ignore local database state
+database.bin
