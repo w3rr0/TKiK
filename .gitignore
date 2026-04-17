@@ -37,7 +37,8 @@ build/
 .ninja_log
 build.ninja
 
-# imgui
+# Local database and UI state
+database.bin
 imgui.ini
 
 # test directory
