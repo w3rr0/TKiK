@@ -78,7 +78,9 @@ int main(int argc, char** argv) {
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     // setting up the window
+
     GLFWwindow* window = glfwCreateWindow(1280, 720, "sqW", NULL, NULL);
+
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
@@ -104,6 +106,7 @@ int main(int argc, char** argv) {
         ImGui::SetColumnWidth(0, ImGui::GetIO().DisplaySize.x * 0.75f);
 
         ImGui::BeginChild("WorkspaceChild");
+
         ImGui::Text("sqW Terminal (Press CTRL+ENTER to execute) >");
 
         ImGuiIO& io = ImGui::GetIO();
@@ -118,7 +121,6 @@ int main(int argc, char** argv) {
 
         ImGui::InputTextMultiline("##query", sql_input, IM_ARRAYSIZE(sql_input), ImVec2(-FLT_MIN, input_height), ImGuiInputTextFlags_AllowTabInput);
 
-        ImGui::SetWindowFontScale(1.0f);
 
         bool is_input_focused = ImGui::IsItemFocused();
 
@@ -204,5 +206,6 @@ int main(int argc, char** argv) {
     ImGui::DestroyContext();
     glfwDestroyWindow(window);
     glfwTerminate();
+
     return 0;
 }
