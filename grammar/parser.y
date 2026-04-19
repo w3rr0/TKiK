@@ -1,3 +1,9 @@
+/**
+ * @file parser.y
+ * @brief Syntax grammar definition (BISON) for the SQL Interpreter.
+ * * This parser constructs the AST by instantiating Statement classes
+ * (SelectStmt, InsertStmt, etc.) based on recognized grammar rules
+ */
 %code requires { // this code will be added to the parser.hpp
     #include <string>
     #include <vector>
@@ -25,11 +31,11 @@
 int yylex();
 void yyerror(const char *s);
 
-// pointer for parsing results
+/** @brief Pointer to the resulting Statement object after parsing */
 Statement* root_statement = nullptr;
 %}
 
-// what tokens can store (number or text)
+/** @brief Union defining types for tokens and rules */
 %union {
 int num;
     char* str;
@@ -46,23 +52,20 @@ int num;
     } agg;
 }
 
-// all tokens that the scanner will send and optional types in <>
+/* Tokens without values */
 %token SELECT FROM WHERE CREATE TABLE INSERT INTO VALUES UPDATE DELETE SET DROP COLUMN ALTER ADD
-
 %token TYPE_INT TYPE_STRING TYPE_BOOL TYPE_DOUBLE TYPE_FLOAT TYPE_NULL
-
 %token IN LIKE BETWEEN AND OR IS NOT
 %token DISTINCT COUNT SUM MIN MAX
 %token ORDER BY ASC DESC LIMIT OFFSET
-
 %token LPAREN RPAREN COMMA SEMICOLON
 %token STAR EQ GT GE LE LT NEQ
 
+/* Tokens with values */
 %token <num> NUMBER
 %token <str> ID STR
 
-// define priorities for logical operators (prevents conflicts)
-// definiotion of types for our grammar rules
+/* Type definitions for grammar rules */
 %type <stmt> instrukcja select_stmt create_stmt insert_stmt update_stmt delete_stmt drop_table_stmt alter_table_stmt
 %type <where> where_clause condition
 %type <strings> id_list value_list columns
@@ -75,11 +78,13 @@ int num;
 %type <str> opt_column
 %type <num> optional_limit optional_offset
 
+/* rules for logical operators */
 %left OR
 %left AND
 
-%%
-// 'target:' + 'ingredient1' + 'ingredient2' + ';'
+%%  /* -=-=-=- GRAMMAR RULES -=-=-=- */
+
+/** @brief Main entry point for the grammar */
 program:
     instrukcja SEMICOLON {
         root_statement = $1;
@@ -87,7 +92,7 @@ program:
     }
     ;
 
-// POSSIBLE INSTRUCTIONS
+/** @brief Route to classic SQL command types*/
 instrukcja:
     select_stmt         { $$ = $1; }
     | create_stmt       { $$ = $1; }
@@ -98,7 +103,7 @@ instrukcja:
     | alter_table_stmt  { $$ = $1; }
     ;
 
-// SELECT with DISTINCT and ORDER BY
+/** @brief Rule for SELECT statements with support for filters, sorting, and aggregation */
 select_stmt:
     SELECT opt_distinct columns FROM ID where_clause opt_order_by opt_asc_desc optional_limit optional_offset{
         // idxs: $1:SELECT, $2:opt_distinct, $3:columns, $4:FROM, $5:ID, $6:where_clause, $7:opt_order_by, $8:opt_asc_desc
@@ -141,18 +146,19 @@ select_stmt:
         if ($2.col) free($2.col);
     }
     ;
-
+/** @brief Optional function for only unique values (DISTINCT) */
 opt_distinct:
     /* blank */ { $$ = false; }
     | DISTINCT  { $$ = true; }
     ;
 
+/** @brief WHERE clause with support for logical and comparison conditions */
 where_clause:
     /* blank */ { $$ = nullptr; }
     | WHERE condition { $$ = $2; }
     ;
 
-// examples of conditions in WHERE
+/** * @brief examples of conditions in WHERE */
 condition:
     ID EQ value {
         $$ = new ComparisonCondition($1, "=", $3);
@@ -213,13 +219,13 @@ condition:
     }
     ;
 
-
+/** @brief Identifier string type definition */
 id_list:
     ID { $$ = new std::vector<std::string>(); $$->push_back($1); free($1); }
     | id_list COMMA ID { $1->push_back($3); $$ = $1; free($3); }
     ;
 
-// CREATE TABLE
+/** @brief Schema definition (CREATE TABLE) */
 create_stmt:
     CREATE TABLE ID LPAREN column_defs RPAREN {
         $$ = new CreateStmt($3, *$5);
@@ -244,7 +250,7 @@ opt_column:
     | COLUMN    { $$ = nullptr; }
     ;
 
-// DATA TYPES
+/** @brief Possible data types in CREATE TABLE statement */
 data_type:
     TYPE_INT      { $$ = strdup("INT"); }
     | TYPE_STRING { $$ = strdup("STRING"); }
@@ -253,7 +259,7 @@ data_type:
     | TYPE_FLOAT  { $$ = strdup("FLOAT"); }
     ;
 
-// INSERT INTO
+/** @brief Data insertion (INSERT INTO) */
 insert_stmt:
     INSERT INTO ID VALUES values_lists {
         $$ = new InsertStmt($3, *$5);
@@ -262,7 +268,7 @@ insert_stmt:
     }
     ;
 
-// many lists for inserting many rows
+/** @brief Many lists of values to insert into table */
 values_lists:
     values_lists COMMA LPAREN value_list RPAREN {
         $1->push_back(*$4); // $1 -> vector<vector<string>>*
@@ -276,7 +282,7 @@ values_lists:
     }
     ;
 
-// single list for inserting one row
+/** @brief List of values to insert into table */
 value_list:
     value_list COMMA value {
         $1->push_back($3);
@@ -288,7 +294,7 @@ value_list:
     }
     ;
 
-// DELETE
+/** @brief Delete row from table (DELETE FROM) function definitions */
 delete_stmt:
     DELETE FROM ID where_clause {
         auto* del = new DeleteStmt($3);
@@ -298,7 +304,7 @@ delete_stmt:
     }
     ;
 
-// UPDATE
+/** @brief Data update (UPDATE) */
 update_stmt:
     UPDATE ID SET ID EQ value where_clause {
         auto* upd = new UpdateStmt($2, $4, $6);
@@ -311,12 +317,12 @@ update_stmt:
     }
     ;
 
-// DROP TABLE
+/** @brief Table removal (DROP TABLE) function definitions */
 drop_table_stmt:
     DROP TABLE ID { $$ = new DropTableStmt($3); free($3); }
     ;
 
-// DROP COLUMN and ADD COLUMN
+/** @brief Table modification (ALTER TABLE) */
 alter_table_stmt:
     ALTER TABLE ID DROP COLUMN ID {
         $$ = new AlterTableStmt($3, $6, AlterTableStmt::DROP);
@@ -335,29 +341,30 @@ alter_table_stmt:
     }
     ;
 
-// ORDER BY ASC / DESC
+/** @brief sorting (ORDER BY) function definitions */
 opt_order_by:
     /* blank */ { $$ = nullptr; }
     | ORDER BY ID { $$ = $3; } //column name
     ;
 
+/** @brief optional option ASC / DESC used in ORDER BY function */
 opt_asc_desc:
     /* blank */ { $$ = true; } // default
     | ASC       { $$ = true; }
     | DESC      { $$ = false; }
     ;
 
-// LIMIT
+/** @brief limit */
 optional_limit:
     LIMIT NUMBER { $$ = $2; }
     | /* empty */ { $$ = -1; }
 
-// OFFSET
+/** @brief offset  */
 optional_offset:
     OFFSET NUMBER { $$ = $2; }
     | /* empty */ { $$ = 0; }
 
-// Column aggregations
+/** * @brief Possible column types to display in table */
 columns:
     STAR      { $$ = new std::vector<std::string>{"*"}; }
     | id_list { $$ = $1; }
@@ -366,6 +373,7 @@ columns:
     }
     ;
 
+/** @brief Aggregate function definitions */
 aggregate_func:
       COUNT LPAREN STAR RPAREN   { $$.type = SelectStmt::Aggregate::COUNT; $$.col = strdup("*"); }
     | COUNT LPAREN ID RPAREN     { $$.type = SelectStmt::Aggregate::COUNT; $$.col = $3; }
@@ -374,6 +382,7 @@ aggregate_func:
     | MAX LPAREN ID RPAREN       { $$.type = SelectStmt::Aggregate::MAX;   $$.col = $3; }
     ;
 
+/** * @brief Possible types used in conditions in WHERE clause */
 value:
     NUMBER { $$ = strdup(std::to_string($1).c_str()); }
     | STR { $$ = $1; }
@@ -384,8 +393,9 @@ value:
 %%
 
 
-// function that will be called automatically
-// if the user enters something that doesn't match the grammar
+/** * @brief Syntax error handler.
+ * Automatically called by Bison when it encounters an invalid token sequence.
+ */
 void yyerror(const char *s) {
     /* blank */
 }

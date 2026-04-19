@@ -164,8 +164,7 @@ void SelectStmt::execute() {
             gui_results.push_back(gui_row);
         }
 
-        // DISPLAY with << operator
-        std::cout << "\nFound " << filteredRows.size() << " rows:" << std::endl;
+        // DISPLAY
         std::string msg = "SELECT: Found " + std::to_string(finalRows.size()) + " rows";
         gui_log.push_back(msg);
 
