@@ -1,8 +1,20 @@
 # sqW database
 
-
 Autorski interpreter języka SQL oraz lokalny silnik bazodanowy zaimplementowany w C++.
 Program pozwala na zarządzanie strukturą tabel oraz manipulację danymi i wykonywanie zapytań.
+
+
+---
+
+## Kontakt
+
+[Krzysztof Leśniak](https://github.com/krlesniak) \
+[krlesniak@student.agh.edu.pl](mailto:krlesniak@student.agh.edu.pl)
+
+[Konrad Mateja](https://github.com/w3rr0) \
+[kmateja@student.agh.edu.pl](mailto:kmateja@student.agh.edu.pl)
+
+---
 
 ## Założenia programu
 * **Ogólne cele:** Implementacja interpretera języka SQL oraz silnika bazodanowego w języku C++. 
@@ -29,6 +41,12 @@ Poniższa tabela zawiera spis tokenów zdefiniowanych w skanerze `lexer.l`.
 | **Typy Danych** | `INT`, `STRING`, `BOOL`, `DOUBLE`, `FLOAT`, `NULL`                                                                             | Obsługiwane typy kolumn w komendzie CREATE TABLE.                                            |
 | **Operatory i Symbole** | `STAR` (*), `EQ` (=), `GT` (>), `GE` (>=), `LE` (<=), `LT` (<), `LPAREN` ('('), `RPAREN` (')'), `COMMA` (,), `SEMICOLON` (;)   | Operatory porównania i znaki interpunkcyjne SQL.                                             |
 | **Wartości i Nazwy** | `NUMBER`, `ID`, `STR`                                                                                                          | Liczby całkowite, identyfikatory (nazwy) oraz napisy w apostrofach.           |
+
+---
+
+## Gramatyka projektu (Notacja Bison)
+Pełna gramatyka znajduje się w pliku:
+**[grammar/parser.y](./grammar/parser.y)**
 
 ---
 
@@ -65,53 +83,28 @@ Follow these steps to build and run the application from the root directory.
     cmake --build build
    ```
 3. **Run the application** \
-   After a successful build, you can run the executable.
+   After a successful build, run the executable.
+        
+CLI version
    ```shell
    ./build/Interpreter-SQL             # Linux / MacOS
    ```
    ```powershell
    .\build\Debug\Interpreter-SQL.exe   # Windows
    ```
-
----
-
-## Gramatyka projektu (Notacja Bison)
-Pełna gramatyka znajduje się w pliku: 
-**[grammar/parser.y](./grammar/parser.y)**
+GUI version
+```shell
+   ./build/Interpreter-SQL --gui      # Linux / MacOS
+   ```
+   ```powershell
+   .\build\Debug\Interpreter-SQL.exe --gui   # Windows
+   ```
 
 ---
 
 ## Project Structure
 
-```
-TKiK/
-├── grammar/
-│   ├── lexer.l
-│   └── parser.y
-├── include/
-│   ├── ast/
-│   │   ├── Statement.hpp
-│   │   ├── SelectStmt.hpp
-│   │   ├── CreateStmt.hpp
-│   │   └── ...
-│   ├── storage/
-│   │   ├── Table.hpp
-│   │   ├── Cell.hpp
-│   │   └── Database.hpp
-│   ├── executor/
-│   │   ├── Executor.hpp
-│   │   └── SelectExecutor.hpp
-│   └── utils/
-│       └── Types.hpp
-└── src/
-    ├── ast/
-    │   └── ...
-    ├── storage/
-    │   └── ...
-    ├── executor/
-    │   └── ...
-    └── main.cpp
-```
+
 
 ---
 
@@ -121,11 +114,3 @@ The program is licensed under the MIT license.
 Details in the [License](LICENSE) file
 
 ---
-
-## Contact
-
-[Krzysztof Leśniak](https://github.com/krlesniak) \
-[krlesniak@student.agh.edu.pl](mailto:krlesniak@student.agh.edu.pl)
-
-[Konrad Mateja](https://github.com/w3rr0) \
-[kmateja@student.agh.edu.pl](mailto:kmateja@student.agh.edu.pl)
