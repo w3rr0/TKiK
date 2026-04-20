@@ -73,12 +73,16 @@ void Utils::printTableCLI() {
     };
     sep();
     std::cout << "|";
-    for (size_t i = 0; i < gui_headers.size(); ++i) std::cout << " " << std::left << std::setw(colWidths[i]) << gui_headers[i] << " |";
+    for (size_t i = 0; i < gui_headers.size(); ++i) {
+        std::cout << " " << std::left << std::setw(colWidths[i]) << gui_headers[i] << " |";
+    }
     std::cout << std::endl;
     sep();
     for (const auto& row : gui_results) {
         std::cout << "|";
-        for (size_t i = 0; i < row.size(); ++i) std::cout << " " << std::left << std::setw(colWidths[i]) << row[i] << " |";
+        for (size_t i = 0; i < row.size(); ++i) {
+            std::cout << " " << std::left << std::setw(colWidths[i]) << row[i] << " |";
+        }
         std::cout << std::endl;
     }
     sep();
@@ -86,20 +90,42 @@ void Utils::printTableCLI() {
 
 // method with CLI loop
 void Utils::runCLI() {
-    std::cout << CLI_PINK << "SQL CLI Mode. Available tables: " << CLI_RESET;
-    auto names = db.getTableNames();
-    if(names.empty()) std::cout << "[No tables]";
-    else for (const auto& n : names) std::cout << "[" << n << "] ";
-    std::cout << "\n";
+    std::cout << CLI_PINK << "SQL CLI Mode " << CLI_RESET;
+    std::cout << CLI_WHITE << "(type 'exit' to quit)" << CLI_RESET << std::endl;
 
     char line[10024];
+
+    std::cout << CLI_PINK << "Available tables: " << CLI_RESET;
+    std::cout << CLI_WHITE << "(type 'show tables' to see)\n" << CLI_RESET;
+
+
     while (true) {
         std::cout << CLI_WHITE << "SQL> " << CLI_RESET;
+
+        std::string lowerInput = line;
+        for (auto & c : lowerInput) {
+            c = (unsigned char)std::tolower(c);
+        }
+
         if (!std::cin.getline(line, sizeof(line))) break;
         if (std::string(line) == "exit") break;
         if (strlen(line) == 0) continue;
 
+        if (lowerInput == "show tables") {
+            auto names = db.getTableNames();
+            if(names.empty()) std::cout << "[No tables]";
+            else for (const auto& n : names) std::cout << "[" << n << "] ";
+            std::cout << "\n";
+
+            continue;
+        }
+
+        std::cout << CLI_PINK << "Executing: " << CLI_RESET;
+        renderColoredSQL(line, false); // false -> CLI
+        std::cout << std::endl;
+
         executeSQL(line);
+
         if (!gui_log.empty()) {
             std::string last = gui_log.back();
             if (last.find("Error") != std::string::npos) {
@@ -109,7 +135,11 @@ void Utils::runCLI() {
                 std::cout << CLI_GREEN << last << CLI_RESET << std::endl;
             }
         }
+
         if (!gui_results.empty()) printTableCLI();
+
         std::cout << std::endl;
+
+        gui_log.clear();
     }
 }

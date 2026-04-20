@@ -1,3 +1,9 @@
+/**
+ * @file lexer.l
+ * @brief Lexical scanner definition (FLEX) for the SQL Interpreter.
+ * * The scanner identifies keywords, operators, data types, and literals,
+ * passing them to the BISON parser along with their values (yylval)
+ */
 %{
 #include <iostream>
 #include <string.h>
@@ -9,22 +15,24 @@
 
 #include "parser.hpp"
 
-/* function that Bison calls to get the next token */
+/** @brief Function called by Bison to fetch the next token from input*/
 int yylex();
 %}
 
-/* after reading one file it should exit */
+/* Flex Options */
+/* Stop after reading a single file */
 %option noyywrap
+/* Make keywords case-insensitive */
 %option caseless
 
-%% /* separates definitions from rules*/
-    /* classic SELECT */
+%% /* -=-=-=- TOKENS -=-=-=- */
+    /* === DQL (Data Query Language) KEYWORDS (Queries) === */
 "SELECT"    { return SELECT; }
 "DISTINCT"  { return DISTINCT; }
 "FROM"      { return FROM; }
 "WHERE"     { return WHERE; }
 
-    /* CREATE TABLE / UPDATE / DELETE / INSERT INTO / DROP */
+    /* === DML (Data Manipulation Language) / DDL (Data Definition Language) KEYWORDS (Data & Schema Management) === */
 "CREATE"    { return CREATE; }
 "TABLE"     { return TABLE; }
 "INSERT"    { return INSERT; }
@@ -38,14 +46,14 @@ int yylex();
 "ALTER"     { return ALTER; }
 "ADD"       { return ADD; }
 
-    /* OPERATIONS WITH STRINGS */
+    /* === LOGICAL OPERATORS & FILTERS === */
 "IN"        { return IN; }
 "LIKE"      { return LIKE; }
 "BETWEEN"   { return BETWEEN; }
 "IS"        { return IS; }
 "NOT"       { return NOT; }
 
-    /* ORDER BY */
+    /* === SORTING AND LIMITS === */
 "ORDER"     { return ORDER; }
 "BY"        { return BY; }
 "ASC"       { return ASC; }
@@ -53,13 +61,13 @@ int yylex();
 "LIMIT"     { return LIMIT; }
 "OFFSET"    { return OFFSET; }
 
-    /* AGGREGATE FUNCTIONS */
+    /* === AGGREGATE FUNCTIONS === */
 "COUNT"     { return COUNT; }
 "SUM"       { return SUM; }
 "MIN"        { return MIN; }
 "MAX"        { return MAX; }
 
-    /* data types for CREATE TABLE*/
+    /* === DATA TYPES ===*/
 "INT"       { return TYPE_INT; }
 "INTEGER"   { return TYPE_INT; }
 "STRING"    { return TYPE_STRING; }
@@ -71,7 +79,7 @@ int yylex();
 "FLOAT"      { return TYPE_FLOAT; }
 "NULL"      { return TYPE_NULL; }
 
-    /* OPERATORS */
+    /* === MATHEMATICAL OPERATORS & COMPARISONS === */
 "*"         { return STAR; }
 "="         { return EQ; }
 ">"         { return GT; }
@@ -82,26 +90,30 @@ int yylex();
 "AND"       { return AND; }
 "OR"        { return OR; }
 
-    /* PARENTHESES / COMMA / SEMICOLON */
+    /* === PUNCTUATION === */
 "("         { return LPAREN; }
 ")"         { return RPAREN; }
 ","         { return COMMA; }
 ";"         { return SEMICOLON; }
 
 
-    /* float numbers */
+    /* === LITERALS & IDENTIFIERS === */
+
+    /** @brief Float numbers, stored as strings to preserve precision */
 [0-9]+\.[0-9]+ {
     yylval.str = strdup(yytext);
     return STR;
 }
 
-    /* yytext, yylval -> built-in Flex variables */
+    /** @brief Integers, converted to int and passed through yylval.num */
 [0-9]+ {
     yylval.num = atoi(yytext);
     return NUMBER;
 }
 
-    /* LETTERS / NUMBERS -> REGEX */
+    /** * @brief Identifiers (Table and Column names).
+     * Converted to lowercase for database consistency
+     */
 [a-zA-Z_][a-zA-Z0-9_]* {
     std::string s(yytext);
     for(auto & c : s) c = (unsigned char)std::tolower(c);
@@ -109,13 +121,13 @@ int yylex();
     return ID;
 }
 
-    /* "" and '' service*/
+    /** * @brief String literals in single '' or double "" quotes */
 (\'[^\']*\'|\"[^\"]*\") {
     yylval.str = strdup(yytext);
     return STR;
 }
 
-    /* WHITE SPACES -> skip */
+    /* === ERROR HANDLING & WHITESPACE === */
 [ \t\n]+    { /* ignore */ }
 .           { std::cerr << "Unknown char " << yytext << std::endl; }
 
