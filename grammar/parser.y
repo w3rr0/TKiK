@@ -25,6 +25,7 @@
 %{
 #include <iostream>
 #include <cstdio>
+#include <vector>
 
 #include "ast/Statement.hpp"
 
@@ -32,7 +33,7 @@ int yylex();
 void yyerror(const char *s);
 
 /** @brief Pointer to the resulting Statement object after parsing */
-Statement* root_statement = nullptr;
+std::vector<Statement*> root_statements;
 %}
 
 /** @brief Union defining types for tokens and rules */
@@ -46,6 +47,8 @@ int num;
     std::vector<ColumnDef>* col_defs;
     std::vector<std::string>* strings;
     std::vector<std::vector<std::string>>* multi_strings;
+    // for instruction list
+    std::vector<Statement*>* stmt_list;
     struct {
             SelectStmt::Aggregate type;
             char* col;
@@ -66,7 +69,7 @@ int num;
 %token <str> ID STR
 
 /* Type definitions for grammar rules */
-%type <stmt> instrukcja select_stmt create_stmt insert_stmt update_stmt delete_stmt drop_table_stmt alter_table_stmt
+%type <stmt> instruction select_stmt create_stmt insert_stmt update_stmt delete_stmt drop_table_stmt alter_table_stmt
 %type <where> where_clause condition
 %type <strings> id_list value_list columns
 %type <col_defs> column_defs
@@ -77,6 +80,7 @@ int num;
 %type <multi_strings> values_lists
 %type <str> opt_column
 %type <num> optional_limit optional_offset
+%type <stmt_list> program
 
 /* rules for logical operators */
 %left OR
@@ -86,14 +90,16 @@ int num;
 
 /** @brief Main entry point for the grammar */
 program:
-    instrukcja SEMICOLON {
-        root_statement = $1;
-        YYACCEPT;
+    /* empty */
+    | program instruction SEMICOLON {
+            if ($2) {
+                root_statements.push_back($2);
+            }
     }
-    ;
+;
 
 /** @brief Route to classic SQL command types*/
-instrukcja:
+instruction:
     select_stmt         { $$ = $1; }
     | create_stmt       { $$ = $1; }
     | insert_stmt       { $$ = $1; }
