@@ -50,6 +50,120 @@ Pełna gramatyka znajduje się w pliku:
 
 ---
 
+## Technologia i Pakiety Zewnętrzne
+
+Projekt opiera się na nowoczesnych narzędziach programistycznych i bibliotekach:
+
+### Generatory Skanerów/Parserów
+
+- **Flex**  
+  Wykorzystywany do generowania skanera (`lexer.l`), który identyfikuje 
+  tokeny SQL (słowa kluczowe, literały, operatory).
+
+- **Bison**  
+  Generator parserów wykorzystywany do przetwarzania gramatyki
+  (`parser.y`) i budowania obiektów instrukcji AST.
+
+### Biblioteki zewnętrzne (zarządzane przez CMake FetchContent)
+
+- **Cereal**  
+  Biblioteka *header-only* służąca do zaawansowanej serializacji binarnej 
+  bazy danych do pliku `database.bin`.
+
+- **ImGui**  
+  Interfejs graficzny wykorzystywany do stworzenia 
+  terminala wizualnego, panelu logów, przeglądarki wszystkich tabel 
+  w bazie danych oraz wyświetlania tabel z danymi.
+
+- **GLFW i OpenGL**  
+  Odpowiadają za tworzenie okien, obsługę wejścia (klawiatura/mysz) 
+  oraz renderowanie grafiki.
+
+---
+
+## Instrukcja Obsługi
+
+### Tryb CLI (Terminal)
+
+- Wpisuj polecenia SQL bezpośrednio po `SQL>`.
+- Każde polecenie musi kończyć się średnikiem (`;`).
+- Można wpisywać kilka zapytań na raz, jedyny warunek, to że
+  muszą być oddzielone średnikiem (`;`).
+
+#### Komendy dodatkowe
+
+- `show tables` – wyświetla listę wszystkich tabel w bazie (ignoruje wielkość liter).
+- `exit` – bezpiecznie zamyka program.
+
+---
+
+### Tryb GUI (Interfejs)
+
+- **Konsola**  
+  Górne okno służy do wpisywania zapytań (obsługuje wiele linii).
+
+- **Skrót klawiszowy**  
+  Użyj `CTRL + ENTER` (lub `CMD + ENTER`), aby szybko wykonać zapytanie
+  lub kliknij przycsik `Execute Query` pod konsolą główną.
+
+- **Przeglądarka schematów**  
+  Prawy panel wyświetla aktualne tabele oraz ich kolumny wraz z typami danych,
+  które można rozwijać z zwijać z powrotem.
+
+- **Historia**  
+  Środkowy panel logów wyświetla historię zapytań z kolorowaniem składni SQL.
+
+- **Tabela wyników (panel pod historią logów)**  
+  Dolna część interfejsu zawiera tabelę wyników zapytań SQL. Wyświetla ona 
+  dane zwrócone przez wykonane zapytanie w formie wierszy i kolumn.
+
+---
+
+## Przykład Użycia
+
+Poniżej znajdują się przykładowe zapytania każdego typu tworzące bazę i manipulujące danymi:
+
+```sql
+-- 1. Tworzenie tabeli
+CREATE TABLE klienci (id INT, imie VARCHAR, nazwisko VARCHAR, miasto VARCHAR);
+
+-- 2. Dodawanie danych
+INSERT INTO klienci VALUES (1, 'Jan', 'Kowalski', 'Kraków'), 
+                           (2, 'Anna', 'Nowak', 'Warszawa');
+
+-- 3. Aktualizacja danych
+UPDATE klienci SET imie = 'Janusz' WHERE id = 1;
+
+-- 4. Zapytanie SELECT z warunkiem WHERE
+SELECT imie FROM klienci WHERE imie LIKE '%a' AND id BETWEEN 1 AND 10 ORDER BY id DESC LIMIT 1;
+
+-- 5. Usuwanie kolumny z istniejącej tabeli
+ALTER TABLE klienci DROP COLUMN miasto;
+
+-- 6. Dodawanie kolumny do istniejącej tabeli (wypełni się NULLAMI)
+ALTER TABLE klienci ADD (COLUMN) premium;
+
+--7 Usuwanie rekordów z tabeli
+DELETE FROM klienci WHERE miasto IN ('Kraków', 'Warszawa', 'Katowice', 'Poznań');
+
+--8 Usuwanie tabeli z bazy
+DROP TABLE klienci;
+```
+---
+
+## Dodatkowe Informacje
+
+- **Serializacja**  
+  Baza danych jest automatycznie zapisywana do pliku binarnego 
+  `database.bin` po każdej udanej operacji modyfikującej 
+  (`INSERT`, `UPDATE`, itp.).
+
+- **Bezpieczeństwo**  
+  Silnik sprawdza zgodność typów przy wstawianiu danych oraz weryfikuje
+  istnienie kolumn przed wykonaniem operacji `ALTER` lub `DROP`.
+
+---
+
 ## Prerequisites
 
 To build this project, you need to have the following tools installed:
