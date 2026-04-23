@@ -18,7 +18,7 @@ extern void yyrestart(FILE*);
 typedef struct yy_buffer_state *YY_BUFFER_STATE;
 extern YY_BUFFER_STATE yy_scan_string(const char * str);
 extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
-extern Statement* root_statement;
+extern std::vector<Statement*> root_statements;
 
 // global data structures
 const std::string DB_FILENAME = "database.bin";
@@ -30,20 +30,24 @@ std::vector<std::string> gui_log;
 
 // method that executes the ast statement
 void executeSQL(const char* input) {
-    gui_error = ""; gui_results.clear(); gui_headers.clear();
+    gui_error = "";
+    gui_results.clear();
+    gui_headers.clear();
     gui_log.push_back("Executing: " + std::string(input));
+    // clearing vector before next query
+    root_statements.clear();
 
     YY_BUFFER_STATE buffer = yy_scan_string(input);
-    if (yyparse() == 0 && root_statement) {
-        try {
-            // execute the logic defined in Statement classes
-            root_statement->execute();
-            db.saveToFile(DB_FILENAME);
-        } catch (const std::exception& e) {
-            gui_error = e.what();
-            gui_log.push_back("Error: " + std::string(e.what()));
+    if (yyparse() == 0) {
+        for (auto* stmt : root_statements) {
+            if (stmt) {
+                stmt->execute();
+                // deleting object after execution
+                delete stmt;
+            }
         }
-        delete root_statement; root_statement = nullptr;
+        // clearing vector before next query
+        root_statements.clear();
     } else {
         gui_log.push_back("Error: Syntax Error!");
         yyrestart(stdin);
