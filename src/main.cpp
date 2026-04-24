@@ -12,13 +12,13 @@
 #include "ast/Statement.hpp"
 #include "gui/Utils.hpp"
 
-// Flex/Bison declaration to connect the parser with cpp
-extern int yyparse();
-extern void yyrestart(FILE*);
-typedef struct yy_buffer_state *YY_BUFFER_STATE;
-extern YY_BUFFER_STATE yy_scan_string(const char * str);
-extern void yy_delete_buffer(YY_BUFFER_STATE buffer);
-extern std::vector<Statement*> root_statements;
+// Flex / Bison declaration to connect the parser with cpp
+extern int yyparse();                                       // fucntion taht starts the parsing process
+extern void yyrestart(FILE*);                               // function that resets the lexer state
+typedef struct yy_buffer_state *YY_BUFFER_STATE;            // Flex type for handling the buffers
+extern YY_BUFFER_STATE yy_scan_string(const char * str);    // tells Flex to read from the string not a file
+extern void yy_delete_buffer(YY_BUFFER_STATE buffer);       // cleans up the memory used by string buffer
+extern std::vector<Statement*> root_statements;             // global vector where Bison stores parsed SQL object (AST)
 
 // global data structures
 const std::string DB_FILENAME = "database.bin";
@@ -37,8 +37,9 @@ void executeSQL(const char* input) {
     // clearing vector before next query
     root_statements.clear();
 
+    // thsi creates a temporary buffer that allows Flex to read a string we wyped in the console in GUI
     YY_BUFFER_STATE buffer = yy_scan_string(input);
-    if (yyparse() == 0) {
+    if (yyparse() == 0) { // yyparse() function returs 0 when the SQL query is correct
         for (auto* stmt : root_statements) {
             if (stmt) {
                 stmt->execute();
@@ -50,9 +51,9 @@ void executeSQL(const char* input) {
         root_statements.clear();
     } else {
         gui_log.push_back("Error: Syntax Error!");
-        yyrestart(stdin);
+        yyrestart(stdin); // tells the lexer to forget about wrong input and wait for the new correct data
     }
-    yy_delete_buffer(buffer);
+    yy_delete_buffer(buffer); // memory clean up for the temporary buffer
 }
 
 int main(int argc, char** argv) {
@@ -74,21 +75,23 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    // initializing GLFW
+    // Window initializion GLFW (common features such as version, core profile)
     if (!glfwInit()) return 1;
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // required for macOS
 
     // setting up the window
-
     GLFWwindow* window = glfwCreateWindow(1280, 720, "sqW", NULL, NULL);
 
+    // all future new looks will be added to thsi window
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1);
 
-    IMGUI_CHECKVERSION(); ImGui::CreateContext();
+    // loading the UI library and  connect it to the window (GLFW) and the drawing engine (OpenGL3).
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
     // font size in gui
     ImGui::GetIO().FontGlobalScale = 1.4f;
     ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -98,9 +101,10 @@ int main(int argc, char** argv) {
 
     // MAIN CONSOLE layout
     while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
+        glfwPollEvents(); // checks for mouse clicks
         ImGui_ImplOpenGL3_NewFrame(); ImGui_ImplGlfw_NewFrame(); ImGui::NewFrame();
 
+        // starting new UI frame
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
         ImGui::Begin("MainLayout", nullptr, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize);
@@ -123,16 +127,17 @@ int main(int argc, char** argv) {
         ImGui::SetWindowFontScale(1.4f);
         float input_height = ImGui::GetIO().DisplaySize.y * 0.30f;
 
+        // input id, height and width, max input size, tab allowed in writing queries
         ImGui::InputTextMultiline("##query", sql_input, IM_ARRAYSIZE(sql_input), ImVec2(-FLT_MIN, input_height), ImGuiInputTextFlags_AllowTabInput);
 
-
+        // shortcut will be executed only if our cursor is in input box (so we are currently writing something)
         bool is_input_focused = ImGui::IsItemFocused();
 
         // if triggered
         if (ImGui::Button("Execute Query", ImVec2(-FLT_MIN, 45)) || (is_input_focused && shortcut_pressed)) {
-            if (strlen(sql_input) > 0) {
+            if (strlen(sql_input) > 0) { // if query is not empty
                 executeSQL(sql_input);
-                memset(sql_input, 0, sizeof(sql_input));
+                memset(sql_input, 0, sizeof(sql_input)); // after exxecution we clear our terminal
                 ImGui::SetKeyboardFocusHere(-1); // going back to the input box
             }
         }
@@ -199,12 +204,16 @@ int main(int argc, char** argv) {
         ImGui::EndChild();
         ImGui::End();
 
+        // prepares the UI data for drawing
         ImGui::Render();
+        // dark gray color for whole screen
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f); glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        // show the finshed frame
         glfwSwapBuffers(window);
     }
 
+    // cleanup the whole window before exiting
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
