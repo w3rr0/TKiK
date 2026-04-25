@@ -201,17 +201,17 @@ Follow these steps to build and run the application from the root directory.
         
 CLI version
    ```shell
-   ./build/Interpreter-SQL             # Linux / MacOS
+   ./build/sqW                    # Linux / MacOS
    ```
    ```powershell
-   .\build\Debug\Interpreter-SQL.exe   # Windows
+   .\build\Debug\sqW.exe          # Windows
    ```
 GUI version
 ```shell
-   ./build/Interpreter-SQL --gui      # Linux / MacOS
+   ./build/sqW --gui              # Linux / MacOS
    ```
    ```powershell
-   .\build\Debug\Interpreter-SQL.exe --gui   # Windows
+   .\build\Debug\sqW.exe --gui    # Windows
    ```
 
 ---
