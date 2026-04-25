@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(Interpreter-SQL)
+project(sqW)
 
 add_definitions(-DGL_SILENCE_DEPRECATION)
 
@@ -57,20 +57,52 @@ set(IMGUI_SOURCES
         include/gui/Utils.hpp
 )
 
+# G Test
+enable_testing()
+
+FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG        v1.14.0
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(include)
 include_directories(${imgui_SOURCE_DIR})
 include_directories(${imgui_SOURCE_DIR}/backends)
 
 file(GLOB_RECURSE ALL_SOURCES "src/*.cpp")
+file(GLOB_RECURSE TEST_SOURCES "tests/*.cpp")
 
-add_executable(Interpreter-SQL
+list(REMOVE_ITEM ALL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+
+add_library(sqW-Core STATIC
         ${ALL_SOURCES}
         ${IMGUI_SOURCES}
         ${BISON_MyParser_OUTPUTS}
         ${FLEX_MyScanner_OUTPUTS}
 )
 
-target_link_libraries(Interpreter-SQL PRIVATE cereal)
-target_link_libraries(Interpreter-SQL PRIVATE glfw
-${OPENGL_LIBRARIES} "-framework Cocoa" "-framework IOKit" "-framework CoreVideo")
+target_link_libraries(sqW-Core PUBLIC
+        cereal
+        glfw
+        ${OPENGL_LIBRARIES}
+        "-framework Cocoa"
+        "-framework IOKit"
+        "-framework CoreVideo"
+)
+
+add_executable(sqW src/main.cpp)
+target_link_libraries(sqW PRIVATE sqW-Core)
+
+
+add_executable(sqW-Tests ${TEST_SOURCES})
+target_link_libraries(sqW-Tests PRIVATE
+        sqW-Core
+        gtest_main
+)
+
+include(GoogleTest)
+gtest_discover_tests(sqW-Tests)
