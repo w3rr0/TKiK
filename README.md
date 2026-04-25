@@ -216,15 +216,7 @@ GUI version
 
 ---
 
-## Project Structure
-
-
-
----
-
 ## License
 
 The program is licensed under the MIT license.
 Details in the [License](LICENSE) file
-
----
