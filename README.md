@@ -199,15 +199,15 @@ Follow these steps to build and run the application from the root directory.
 3. **Run the application** \
    After a successful build, run the executable.
         
-CLI version
+   CLI
    ```shell
    ./build/sqW                    # Linux / MacOS
    ```
    ```powershell
    .\build\Debug\sqW.exe          # Windows
    ```
-GUI version
-```shell
+   GUI
+   ```shell
    ./build/sqW --gui              # Linux / MacOS
    ```
    ```powershell
