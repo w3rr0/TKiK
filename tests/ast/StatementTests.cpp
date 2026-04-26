@@ -1,0 +1,1 @@
+/** @brief no tests needed here because it is a parent class for other statements */

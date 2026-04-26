@@ -144,10 +144,11 @@ void SelectStmt::execute() {
         }
 
         // LIMIT
-        if (limit >= 0 && limit < (int)finalRows.size()) {
-            finalRows.resize(limit);
+        if (limit >= 0) { // if limit is set, becuase default is -1
+            if (limit < (int)finalRows.size()) {
+                finalRows.resize(limit);
+            }
         }
-
         // data for GUI
         gui_headers.clear();
         gui_results.clear();

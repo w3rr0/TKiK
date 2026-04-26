@@ -56,7 +56,7 @@ int num;
 }
 
 /* Tokens without values */
-%token SELECT FROM WHERE CREATE TABLE INSERT INTO VALUES UPDATE DELETE SET DROP COLUMN ALTER ADD
+%token SELECT FROM WHERE CREATE TABLE INSERT INTO VALUES UPDATE DELETE SET DROP COLUMN ALTER ADD SHOW TABLES
 %token TYPE_INT TYPE_STRING TYPE_BOOL TYPE_DOUBLE TYPE_FLOAT TYPE_NULL
 %token IN LIKE BETWEEN AND OR IS NOT
 %token DISTINCT COUNT SUM MIN MAX
@@ -107,6 +107,7 @@ instruction:
     | delete_stmt       { $$ = $1; }
     | drop_table_stmt   { $$ = $1; }
     | alter_table_stmt  { $$ = $1; }
+    | SHOW TABLES       { $$ = nullptr; }
     ;
 
 /** @brief Rule for SELECT statements with support for filters, sorting, and aggregation */
