@@ -4,6 +4,7 @@
  */
 #include "Statement.hpp"
 #include "storage/Cell.hpp"
+#include <string>
 #pragma once
 
 /**

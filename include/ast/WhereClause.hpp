@@ -87,8 +87,11 @@ public:
         : left(std::move(l)), op(std::move(oper)), right(std::move(r)) {}
 
     bool evaluate(const Table& table, const std::vector<Cell>& row) const override;
-
     void print() const override;
+
+    const std::unique_ptr<WhereClause>& getLeft() const { return left; }
+    const std::string& getOp() const { return op; }
+    const std::unique_ptr<WhereClause>& getRight() const { return right; }
 };
 
 /**
@@ -115,6 +118,10 @@ public:
 
     bool evaluate(const Table& table, const std::vector<Cell>& row) const override;
     void print() const override;
+
+    const std::string& getColumn() const { return column; }
+    const std::string& getMin() const { return valMin; }
+    const std::string& getMax() const { return valMax; }
 };
 
 /**
@@ -138,4 +145,7 @@ public:
 
     bool evaluate(const Table& table, const std::vector<Cell>& row) const override;
     void print() const override;
+
+    const std::string& getColumn() const { return column; }
+    const std::vector<std::string>& getValues() const { return values; }
 };

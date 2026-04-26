@@ -46,7 +46,21 @@ public:
         this->isDistinct = distinct;
         this->limit = -1;
         this->offset = 0;
+        this->aggType = Aggregate::NONE;
+        this->aggColumn = "";
+        this->orderByColumn = "";
+        this->isAscending = true;
+        this->where = nullptr;
     }
+
+    /** * @brief getters */
+    std::string getTableName() { return tableName; }
+    std::vector<std::string> getColumns() { return columns; }
+    bool getDistinct() { return isDistinct; }
+    Aggregate getAggregate() { return aggType; }
+    std::string getAggColumn() { return aggColumn; }
+    std::string getOrderBy() { return orderByColumn; }
+    bool getAscending() { return isAscending; }
 
     // setters
     /**

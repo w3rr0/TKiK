@@ -96,6 +96,10 @@ int yylex();
 ","         { return COMMA; }
 ";"         { return SEMICOLON; }
 
+    /* === ADDITIONAL FUNCTIONS === */
+"SHOW"      { return SHOW; }
+"TABLES"    { return TABLE; }
+
 
     /* === LITERALS & IDENTIFIERS === */
 

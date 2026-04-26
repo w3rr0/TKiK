@@ -15,7 +15,7 @@ void Utils::renderColoredSQL(const std::string& text, bool isGui) {
     // sql keywords
     static std::regex regKeywords("\\b(SELECT|FROM|WHERE|CREATE|TABLE|INSERT|INTO|VALUES|UPDATE|DELETE|SET|DROP|"
                                   "COLUMN|ALTER|ADD|LIMIT|OFFSET""|DISTINCT|IS|NOT|AND|OR|ORDER|BY|ASC|DESC|BETWEEN|"
-                                  "LIKE|IN|COUNT|MIN|MAX|SUM)\\b", std::regex_constants::icase);
+                                  "LIKE|IN|COUNT|MIN|MAX|SUM|SHOW|TABLES)\\b", std::regex_constants::icase);
     // sql data types
     static std::regex regTypes("\\b(INT|INTEGER|STRING|TEXT|VARCHAR|BOOL|BOOLEAN|DOUBLE|FLOAT|NULL)\\b",
                                     std::regex_constants::icase);
@@ -102,21 +102,25 @@ void Utils::runCLI() {
     while (true) {
         std::cout << CLI_WHITE << "SQL> " << CLI_RESET;
 
+        if (!std::cin.getline(line, sizeof(line))) break;
+        if (std::string(line) == "exit") break;
+        if (strlen(line) == 0) continue;
+
         std::string lowerInput = line;
         for (auto & c : lowerInput) {
             c = (unsigned char)std::tolower(c);
         }
 
-        if (!std::cin.getline(line, sizeof(line))) break;
-        if (std::string(line) == "exit") break;
-        if (strlen(line) == 0) continue;
-
         if (lowerInput == "show tables") {
             auto names = db.getTableNames();
-            if(names.empty()) std::cout << "[No tables]";
-            else for (const auto& n : names) std::cout << "[" << n << "] ";
+            if(names.empty()) {
+                std::cout << "[No tables]";
+            } else {
+                for (const auto& n : names) {
+                    std::cout << "[" << n << "] ";
+                }
+            }
             std::cout << "\n";
-
             continue;
         }
 
