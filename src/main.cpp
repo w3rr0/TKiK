@@ -21,7 +21,15 @@ extern void yy_delete_buffer(YY_BUFFER_STATE buffer);       // cleans up the mem
 extern std::vector<Statement*> root_statements;             // global vector where Bison stores parsed SQL object (AST)
 
 // global data structures
-const std::string DB_FILENAME = "database.bin";
+std::string getDatabasePath() {
+    const char* homeDir = std::getenv("HOME");
+    if (!homeDir) return "database.bin";
+    std::string sqwDir = std::string(homeDir) + "/.sqW";
+    std::filesystem::create_directories(sqwDir);
+    return sqwDir + "/database.bin";
+}
+
+const std::string DB_FILENAME = getDatabasePath();
 Database db("test_database");
 std::vector<std::vector<std::string>> gui_results;
 std::vector<std::string> gui_headers;
@@ -72,6 +80,7 @@ int main(int argc, char** argv) {
     // CLI version
     if (!use_gui){
         Utils::runCLI();
+        db.saveToFile(DB_FILENAME);
         return 0;
     }
 
@@ -220,5 +229,6 @@ int main(int argc, char** argv) {
     glfwDestroyWindow(window);
     glfwTerminate();
 
+    db.saveToFile(DB_FILENAME);
     return 0;
 }
