@@ -52,7 +52,6 @@ void InsertStmt::execute() {
             insertedCount++;
         }
         std::string msg = "INSERTED " + std::to_string(insertedCount) + " new rows";
-        std::cout << msg << std::endl;
         gui_log.push_back(msg);
 
     } catch (const std::exception& e) {

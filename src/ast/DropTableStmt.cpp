@@ -12,7 +12,6 @@ void DropTableStmt::execute() {
         db.dropTable(tableName);
 
         std::string msg = "DROP TABLE " + tableName;
-        std::cout << msg << std::endl;
         gui_log.push_back(msg);
     } catch (const std::exception& e) {
         std::string errMsg = "Error while executing DROP TABLE " + tableName;

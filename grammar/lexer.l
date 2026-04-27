@@ -132,7 +132,7 @@ int yylex();
 }
 
     /* === ERROR HANDLING & WHITESPACE === */
-[ \t\n]+    { /* ignore */ }
+[ \t\n\r]+    { /* ignore */ }
 .           { std::cerr << "Unknown char " << yytext << std::endl; }
 
 %%

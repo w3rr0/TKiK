@@ -14,12 +14,10 @@ void AlterTableStmt::execute() {
             table.addColumn(columnName, colType);
 
             std::string msg = "ALTER TABLE: column " + columnName + " added to the table " + table.getName();
-            std::cout << msg << std::endl;
             gui_log.push_back(msg);
         } else if (action == DROP) {
             table.dropColumn(columnName);
             std::string msg = "ALTER TABLE: column " + columnName + " dropped from the table " + table.getName();
-            std::cout << msg << std::endl;
             gui_log.push_back(msg);
         }
     } catch (const std::exception& e) {
