@@ -18,10 +18,8 @@ Cell::Type mapUserType(const std::string& type) {
 }
 void CreateStmt::execute() {
     try {
-        // creating new table in our database
         db.createTable(tableName);
 
-        // reference to our new table
         Table& table = db.getTable(tableName);
 
         std::string msg = "CREATED TABLE " + tableName;

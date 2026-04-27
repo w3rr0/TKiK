@@ -17,7 +17,6 @@ static std::string cleanInput(std::string s) {
 
 void InsertStmt::execute() {
     try {
-        // getting the table from database
         Table& table = db.getTable(tableName);
         const auto& targetColumns = table.getColumns(); // all columns
         int insertedCount = 0;
@@ -36,18 +35,27 @@ void InsertStmt::execute() {
                 std::string val = cleanInput(rowVal[i]);
                 Cell::Type targetType = targetColumns[i].getType();
 
+                std::string lowerVal = val;
+                for (auto & c : lowerVal) {
+                    c = (unsigned char)std::tolower(c);
+                }
+
+                if (lowerVal == "null") {
+                    rowToInsert.emplace_back(Cell());
+                    continue;
+                }
+
                 if (targetType == Cell::INT) {
-                    rowToInsert.push_back(Cell(std::stoi(val))); // string -> int
+                    rowToInsert.emplace_back(Cell(std::stoi(val)));
                 } else if (targetType == Cell::DOUBLE) {
-                    rowToInsert.push_back(Cell(std::stod(val))); // string -> double
+                    rowToInsert.emplace_back(Cell(std::stod(val)));
                 } else if (targetType == Cell::BOOL) {
-                    rowToInsert.push_back(Cell(val == "true" || val == "1")); // true -> 1, false -> 0
+                    rowToInsert.emplace_back(Cell(val == "true" || val == "1"));
                 } else {
-                    rowToInsert.push_back(Cell(val)); // default text type
+                    rowToInsert.emplace_back(Cell(val)); // default text type
                 }
             }
 
-            // inserting row to our engine
             table.insertRow(rowToInsert);
             insertedCount++;
         }

@@ -38,7 +38,6 @@ void SelectStmt::execute() {
             }
         }
 
-        // vector with Cells
         std::vector<std::vector<Cell>> filteredRows;
         // FILTERS
         for (size_t i = 0; i < table.getRowCount(); ++i) {
@@ -131,10 +130,10 @@ void SelectStmt::execute() {
             }
             gui_row.push_back(res_ss.str());
             gui_results.push_back(gui_row);
-            return; // end of execute()
+            return;
         }
 
-        // OFSET
+        // OFFSET
         if (offset > 0) {
             if (offset >= (int)finalRows.size()) {
                 finalRows.clear();
