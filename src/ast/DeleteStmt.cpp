@@ -23,7 +23,6 @@ void DeleteStmt::execute() {
             }
         }
         std::string msg = "DELETED " + std::to_string(deleteCount) + " rows";
-        std::cout << msg << std::endl;
         gui_log.push_back(msg);
 
     } catch (const std::exception& e) {

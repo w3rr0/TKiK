@@ -24,7 +24,7 @@ void Utils::renderColoredSQL(const std::string& text, bool isGui) {
     // strings
     static std::regex regStrings("('\\s*[^']*\\s*'|\\\"\\s*[^\\\"]*\\s*\\\")");
     // connectting words into a sentence
-    static std::regex wordRegex("([\\w*]+|'[^']*'|\\\"[^\\\"]*\\\"|[,;\\(\\)=<>!]+|[ ]+)");
+    static std::regex wordRegex("([\\w*]+|'[^']*'|\\\"[^\\\"]*\\\"|[,;\\(\\)=<>!\\.]+|[ ]+)");
 
     auto words_begin = std::sregex_iterator(text.begin(), text.end(), wordRegex);
     auto words_end = std::sregex_iterator();
@@ -94,17 +94,27 @@ void Utils::runCLI() {
     std::cout << CLI_WHITE << "(type 'exit' to quit)" << CLI_RESET << std::endl;
 
     char line[10024];
+    // buffer for queries continued after 'ENTER'
+    std::string queryEnter= "";
 
     std::cout << CLI_PINK << "Available tables: " << CLI_RESET;
     std::cout << CLI_WHITE << "(type 'show tables' to see)\n" << CLI_RESET;
 
 
     while (true) {
-        std::cout << CLI_WHITE << "SQL> " << CLI_RESET;
+        // if is empty start of te line will be 'sqW' otherwise if we will be finishing the query in new line '->'
+        if (queryEnter.empty()) {
+            std::cout << CLI_WHITE << "sqW> " << CLI_RESET;
+        } else {
+            std::cout << CLI_WHITE << "  -> " << CLI_RESET;
+        }
 
         if (!std::cin.getline(line, sizeof(line))) break;
         if (std::string(line) == "exit") break;
         if (strlen(line) == 0) continue;
+
+        // adding line with space char to the buffer
+        queryEnter += std::string(line) + " ";
 
         std::string lowerInput = line;
         for (auto & c : lowerInput) {
@@ -121,29 +131,35 @@ void Utils::runCLI() {
                 }
             }
             std::cout << "\n";
+            // clearing buffer after finished query
+            queryEnter = "";
             continue;
         }
 
-        std::cout << CLI_PINK << "Executing: " << CLI_RESET;
-        renderColoredSQL(line, false); // false -> CLI
-        std::cout << std::endl;
+        // if we find ';' in our buffer than the query should be ended after it and then optional errors may appear
+        if (queryEnter.find(';') != std::string::npos) {
+            std::cout << CLI_PINK << "Executing: " << CLI_RESET;
+            renderColoredSQL(queryEnter, false);
+            std::cout << std::endl;
 
-        executeSQL(line);
+            executeSQL(queryEnter.c_str());
 
-        if (!gui_log.empty()) {
-            std::string last = gui_log.back();
-            if (last.find("Error") != std::string::npos) {
-                std::cout << CLI_RED << last << CLI_RESET << std::endl;
+            // log and table display
+            if (!gui_log.empty()) {
+                std::string last = gui_log.back();
+                if (last.find("Error") != std::string::npos) {
+                    std::cout << CLI_RED << last << CLI_RESET << std::endl;
+                } else {
+                    std::cout << CLI_GREEN << last << CLI_RESET << std::endl;
+                }
             }
-            else {
-                std::cout << CLI_GREEN << last << CLI_RESET << std::endl;
+            if (!gui_results.empty()) {
+                printTableCLI();
             }
+
+            std::cout << std::endl;
+            queryEnter = ""; // reseting buffer for new query
+            gui_log.clear();
         }
-
-        if (!gui_results.empty()) printTableCLI();
-
-        std::cout << std::endl;
-
-        gui_log.clear();
     }
 }

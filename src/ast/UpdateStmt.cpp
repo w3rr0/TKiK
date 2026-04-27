@@ -46,7 +46,6 @@ void UpdateStmt::execute() {
             }
         }
         std::string msg = "UPDATED " + std::to_string(updateCount) + " rows";
-        std::cout << msg << std::endl;
         gui_log.push_back(msg);
 
     } catch (const std::exception& e) {

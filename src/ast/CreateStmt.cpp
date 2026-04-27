@@ -25,7 +25,6 @@ void CreateStmt::execute() {
         Table& table = db.getTable(tableName);
 
         std::string msg = "CREATED TABLE " + tableName;
-        std::cout << msg << std::endl;
         gui_log.push_back(msg);
 
         // adding columns

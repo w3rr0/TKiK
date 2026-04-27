@@ -59,7 +59,6 @@ void executeSQL(const char* input) {
         root_statements.clear();
     } else {
         gui_log.push_back("Error: Syntax Error!");
-        yyrestart(stdin); // tells the lexer to forget about wrong input and wait for the new correct data
     }
     yy_delete_buffer(buffer); // memory clean up for the temporary buffer
 }
@@ -133,7 +132,7 @@ int main(int argc, char** argv) {
         bool enter_pressed = ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter);
         bool shortcut_pressed = ctrl_pressed && enter_pressed;
 
-        ImGui::SetWindowFontScale(1.4f);
+        ImGui::SetWindowFontScale(1.2f);
         float input_height = ImGui::GetIO().DisplaySize.y * 0.30f;
 
         // input id, height and width, max input size, tab allowed in writing queries
@@ -154,7 +153,7 @@ int main(int argc, char** argv) {
         // HISTORY LOG layout
         ImGui::Separator();
         ImGui::Text("History Log:");
-        ImGui::BeginChild("LogRegion", ImVec2(0, ImGui::GetIO().DisplaySize.y * 0.15f), true);
+        ImGui::BeginChild("LogRegion", ImVec2(0, ImGui::GetIO().DisplaySize.y * 0.25f), true);
         for (const auto& log_line : gui_log) {
             if (log_line.find("Executing:") != std::string::npos) {
                 ImGui::TextColored(GUI_PINK, "Executing: ");
