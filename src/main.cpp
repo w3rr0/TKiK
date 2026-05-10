@@ -51,20 +51,17 @@ void executeSQL(const char* input) {
         for (auto* stmt : root_statements) {
             if (stmt) {
                 stmt->execute();
-                // deleting object after execution
                 delete stmt;
             }
         }
-        // clearing vector before next query
         root_statements.clear();
     } else {
         gui_log.push_back("Error: Syntax Error!");
     }
-    yy_delete_buffer(buffer); // memory clean up for the temporary buffer
+    yy_delete_buffer(buffer);
 }
 
 int main(int argc, char** argv) {
-    // loading database from file at startup
     try {
         if (std::filesystem::exists(DB_FILENAME)) {
             db.loadFromFile(DB_FILENAME);
@@ -72,7 +69,6 @@ int main(int argc, char** argv) {
     } catch (...) {}
 
     bool use_gui = false;
-    // checking for --gui flag in arguments
     for (int i = 1; i < argc; ++i) {
         if (std::string(argv[i]) == "--gui") use_gui = true;
     }
@@ -100,7 +96,6 @@ int main(int argc, char** argv) {
     // loading the UI library and  connect it to the window (GLFW) and the drawing engine (OpenGL3).
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
-    // font size in gui
     ImGui::GetIO().FontGlobalScale = 1.4f;
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 150");
@@ -143,9 +138,9 @@ int main(int argc, char** argv) {
 
         // if triggered
         if (ImGui::Button("Execute Query", ImVec2(-FLT_MIN, 45)) || (is_input_focused && shortcut_pressed)) {
-            if (strlen(sql_input) > 0) { // if query is not empty
+            if (strlen(sql_input) > 0) {
                 executeSQL(sql_input);
-                memset(sql_input, 0, sizeof(sql_input)); // after exxecution we clear our terminal
+                // memset(sql_input, 0, sizeof(sql_input)); // after exxecution we clear our terminal
                 ImGui::SetKeyboardFocusHere(-1); // going back to the input box
             }
         }
@@ -214,7 +209,6 @@ int main(int argc, char** argv) {
 
         // prepares the UI data for drawing
         ImGui::Render();
-        // dark gray color for whole screen
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f); glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         // show the finshed frame

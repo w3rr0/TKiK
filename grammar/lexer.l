@@ -62,22 +62,23 @@ int yylex();
 "OFFSET"    { return OFFSET; }
 
     /* === AGGREGATE FUNCTIONS === */
-"COUNT"     { return COUNT; }
-"SUM"       { return SUM; }
+"COUNT"      { return COUNT; }
+"SUM"        { return SUM; }
 "MIN"        { return MIN; }
 "MAX"        { return MAX; }
 
     /* === DATA TYPES ===*/
-"INT"       { return TYPE_INT; }
-"INTEGER"   { return TYPE_INT; }
-"STRING"    { return TYPE_STRING; }
-"TEXT"      { return TYPE_STRING; }
+"INT"        { return TYPE_INT; }
+"INTEGER"    { return TYPE_INT; }
+"STRING"     { return TYPE_STRING; }
+"TEXT"       { return TYPE_STRING; }
 "VARCHAR"    { return TYPE_STRING; }
 "BOOLEAN"    { return TYPE_BOOL; }
 "BOOL"       { return TYPE_BOOL; }
 "DOUBLE"     { return TYPE_DOUBLE; }
 "FLOAT"      { return TYPE_FLOAT; }
-"NULL"      { return TYPE_NULL; }
+"NULL"       { return TYPE_NULL; }
+"NUMERIC"    { return TYPE_NUMERIC; }
 
     /* === MATHEMATICAL OPERATORS & COMPARISONS === */
 "*"         { return STAR; }

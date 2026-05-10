@@ -17,6 +17,16 @@ static std::string clearQuotes(std::string s) {
 // helper method that creates a Cell object with the correct type
 Cell createCellUpdate(const std::string& val, Cell::Type type) {
     std::string clean = clearQuotes(val);
+    std::string lowerVal = clean;
+
+    for (auto & c : lowerVal) {
+        c = (unsigned char)std::tolower(c);
+    }
+
+    if (lowerVal == "null") {
+        return Cell();
+    }
+
     if (type == Cell::INT) return Cell(std::stoi(clean));
     if (type == Cell::DOUBLE) return Cell(std::stod(clean));
     if (type == Cell::BOOL) return Cell(clean == "true" || clean == "1");
@@ -28,23 +38,24 @@ void UpdateStmt::execute() {
         Table& table = db.getTable(tableName);
         int updateCount = 0;
 
+        std::vector<std::pair<std::string, Cell>> preparedUpdates;
+        for (auto const& [colName, newVal] : columnsToUpdate) {
+            Cell::Type targetType = table.getColumn(colName).getType();
+            preparedUpdates.push_back({colName, createCellUpdate(newVal, targetType)});
+        }
         for (size_t i = 0; i < table.getRowCount(); i++) {
-            // we skip the row that is marked as deleted
             if (table.isDeleted(i)) continue;
 
             std::vector<Cell> row = table.getRow(i);
 
-            // checking for WHERE condition
             if (!where || where->evaluate(table, row)) {
-                for (auto [colName, newVal] : columnsToUpdate) {
-                    Cell::Type newType = table.getColumn(colName).getType();
-                    Cell newValue = createCellUpdate(newVal, newType);
-
+                for (auto const& [colName, newValue] : preparedUpdates) {
                     table.updateCell(i, colName, newValue);
                 }
                 updateCount++;
             }
         }
+
         std::string msg = "UPDATED " + std::to_string(updateCount) + " rows";
         gui_log.push_back(msg);
 

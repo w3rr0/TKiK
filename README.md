@@ -45,7 +45,17 @@ Poniższa tabela zawiera spis tokenów zdefiniowanych w skanerze `lexer.l`.
 ---
 
 ## Gramatyka projektu (Notacja Bison)
+
+### Mechanizm działania i integracja z C++
+
+Integracja składni SQL z silnikiem bazy danych opiera się na wzorcu AST (Abstract Syntax Tree). 
+Skaner Flex rozpoznaje słowa kluczowe i symbole, przekazując je do parsera Bison, który dopasowuje je do reguł gramatycznych. 
+W momencie rozpoznania poprawnej instrukcji, parser tworzy obiekty klas C++ (np. SelectStmt, InsertStmt), 
+wypełniając je danymi z zapytania. Dzięki temu sprawdzanie składni zapytania jest niezależne od wykonywania operacji na danych (execute())
+
+
 Pełna gramatyka znajduje się w pliku:
+
 **[grammar/parser.y](./grammar/parser.y)**
 
 ---
@@ -135,13 +145,14 @@ INSERT INTO klienci VALUES (1, 'Jan', 'Kowalski', 'Kraków'),
 UPDATE klienci SET imie = 'Janusz' WHERE id = 1;
 
 -- 4. Zapytanie SELECT z warunkiem WHERE
-SELECT imie FROM klienci WHERE imie LIKE '%a' AND id BETWEEN 1 AND 10 ORDER BY id DESC LIMIT 1;
+SELECT imie FROM klienci WHERE imie LIKE '%a' AND id BETWEEN 1 AND 10 
+                         ORDER BY id DESC LIMIT 5;
 
 -- 5. Usuwanie kolumny z istniejącej tabeli
 ALTER TABLE klienci DROP COLUMN miasto;
 
 -- 6. Dodawanie kolumny do istniejącej tabeli (wypełni się NULLAMI)
-ALTER TABLE klienci ADD (COLUMN) premium;
+ALTER TABLE klienci ADD (COLUMN) premia NUMERIC;
 
 --7 Usuwanie rekordów z tabeli
 DELETE FROM klienci WHERE miasto IN ('Kraków', 'Warszawa', 'Katowice', 'Poznań');
